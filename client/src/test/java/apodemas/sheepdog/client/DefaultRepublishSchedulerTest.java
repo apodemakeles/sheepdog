@@ -32,13 +32,6 @@ public class DefaultRepublishSchedulerTest {
                 .topicName("schedule").payload(Unpooled.buffer()).build();
     }
 
-    private void sleep(long millis){
-        try{
-            Thread.sleep(millis);
-        }catch (Throwable e){
-
-        }
-    }
 
     @Test
     public void testTimeExceedLimit() throws Exception{
