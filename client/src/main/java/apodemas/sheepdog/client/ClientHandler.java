@@ -56,7 +56,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<MqttMessage> {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        destroy();
+        closeChannel(ctx, new ServerCloseConnectionException());
     }
 
     @Override
@@ -99,13 +99,13 @@ public class ClientHandler extends SimpleChannelInboundHandler<MqttMessage> {
                 if(logger.isDebugEnabled()){
                     logger.debug("send a ping to server");
                 }
-                ChannelFuture channelFuture = ctx.write(ProMqttMessageFactory.newPingreq());
+                ChannelFuture channelFuture = ctx.writeAndFlush(ProMqttMessageFactory.newPingreq());
                 if (settings.pingResponseTimeoutSec() > 0){
                     channelFuture.addListener(fut->{
                         if(fut.isSuccess() && pingResponseTimeout == null){
                             int timeoutSec = settings.pingResponseTimeoutSec();
                             pingResponseTimeout = schedule(ctx,
-                                    new RingrespTimeoutTask(ctx, timeoutSec * 1000 * 1000 * 1000),
+                                    new RingrespTimeoutTask(ctx, new Long(timeoutSec) * 1000 * 1000 * 1000),
                                     timeoutSec,
                                     TimeUnit.SECONDS);
                         }
@@ -185,32 +185,32 @@ public class ClientHandler extends SimpleChannelInboundHandler<MqttMessage> {
         return System.nanoTime();
     }
 
-    private void destroy() {
-        state = CLOSED;
-
-        if (pingResponseTimeout != null){
-            pingResponseTimeout.cancel(false);
-            pingResponseTimeout = null;
-        }
-
-        if (repubScheduler != null){
-            repubScheduler.close();
-        }
-    }
-
     private void closeChannel(ChannelHandlerContext ctx, Throwable cause) {
-        if (cause != null) {
-            if(logger.isErrorEnabled()){
-                logger.warn("exception occurred", cause);
+        if(state != CLOSED) {
+            if (cause != null) {
+                if(logger.isErrorEnabled()){
+                    logger.warn("exception occurred", cause);
+                }
+            }
+            ctx.close().addListener(fut->{
+                if(cause != null) {
+                    shutdownHandler.setFailure(cause);
+                }else{
+                    shutdownHandler.shutdownGracefully();
+                }
+            });
+
+            if (pingResponseTimeout != null) {
+                pingResponseTimeout.cancel(false);
+                pingResponseTimeout = null;
+            }
+
+            if (repubScheduler != null) {
+                repubScheduler.close();
             }
         }
-        ctx.close().addListener(fut->{
-            if(cause != null) {
-                shutdownHandler.setFailure(cause);
-            }else{
-                shutdownHandler.shutdownGracefully();
-            }
-        });
+
+        state = CLOSED;
     }
 
     private final class RingrespTimeoutTask extends AbstractScheduleTask {
