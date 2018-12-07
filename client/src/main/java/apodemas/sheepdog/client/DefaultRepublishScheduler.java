@@ -11,7 +11,6 @@ import io.netty.util.concurrent.ScheduledFuture;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
@@ -33,9 +32,9 @@ class DefaultRepublishScheduler implements RepublishScheduler {
 
     public DefaultRepublishScheduler(EventExecutor executor, ClientSettings settings, FixedLinkedQueue<Entry> queue) {
         this.executor = executor;
-        this.maxRepubTimes = settings.getMaxRepubTimes();
+        this.maxRepubTimes = settings.maxRepubTimes();
         if(queue == null) {
-            this.queue = new FixedLinkedQueue<>(settings.getMaxRepubQueueSize());
+            this.queue = new FixedLinkedQueue<>(settings.maxRepubQueueSize());
         }else{
             this.queue = queue;
         }

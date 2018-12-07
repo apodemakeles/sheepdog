@@ -50,7 +50,7 @@ public class ClientContext {
             fut.addListener(f -> {
                 if (f.isSuccess()) {
                     scheduler.schedule(handlerContext, msg,
-                            settings.getPingResponseTimeoutSec(), TimeUnit.SECONDS);
+                            settings.publishAckTimeoutSec(), TimeUnit.SECONDS);
                 } else {
                     msg.release();
                 }

@@ -1,5 +1,6 @@
 package apodemas.sheepdog.client;
 
+import apodemas.common.Checks;
 import io.netty.channel.ChannelHandlerContext;
 
 /**
@@ -10,7 +11,7 @@ public abstract class AbstractScheduleTask implements Runnable {
     private final ChannelHandlerContext ctx;
 
     AbstractScheduleTask(ChannelHandlerContext ctx) {
-        this.ctx = ctx;
+        this.ctx = Checks.notNull(ctx, "ctx");
     }
 
     @Override

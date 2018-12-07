@@ -1,5 +1,6 @@
 package apodemas.sheepdog.client;
 
+import apodemas.common.Checks;
 import apodemas.common.StringUtils;
 import apodemas.sheepdog.core.concurrent.EventLoopPromise;
 import apodemas.sheepdog.core.mqtt.ProMqttMessageFactory;
@@ -25,16 +26,22 @@ public class ClientHandler extends SimpleChannelInboundHandler<MqttMessage> {
 
     private int state;
 
-    private EventLoopPromise shutdownHandler;
-    private int keepAliveSec;
-    private String username;
-    private byte[] password;
-    private String clientId;
-    private ClientSettings settings;
+    private final EventLoopPromise shutdownHandler;
+    private final ClientInfo info;
+    private final ClientSettings settings;
+    private final MessageListener listener;
+
     private long lastPingRespTime;
     private ScheduledFuture<?> pingResponseTimeout;
-    private MessageListener listener;
     private DefaultRepublishScheduler repubScheduler;
+
+    public ClientHandler(EventLoopPromise shutdownHandler, ClientInfo info, ClientSettings settings, MessageListener listener){
+        super(true);
+        this.shutdownHandler = Checks.notNull(shutdownHandler, "shutdownHandler");
+        this.info = Checks.notNull(info, "info");
+        this.settings = Checks.notNull(settings, "settings");
+        this.listener = Checks.notNull(listener, "listener");
+    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -93,10 +100,10 @@ public class ClientHandler extends SimpleChannelInboundHandler<MqttMessage> {
                     logger.debug("send a ping to server");
                 }
                 ChannelFuture channelFuture = ctx.write(ProMqttMessageFactory.newPingreq());
-                if (settings.getPingResponseTimeoutSec() > 0){
+                if (settings.pingResponseTimeoutSec() > 0){
                     channelFuture.addListener(fut->{
                         if(fut.isSuccess() && pingResponseTimeout == null){
-                            int timeoutSec = settings.getPingResponseTimeoutSec();
+                            int timeoutSec = settings.pingResponseTimeoutSec();
                             pingResponseTimeout = schedule(ctx,
                                     new RingrespTimeoutTask(ctx, timeoutSec * 1000 * 1000 * 1000),
                                     timeoutSec,
@@ -113,11 +120,11 @@ public class ClientHandler extends SimpleChannelInboundHandler<MqttMessage> {
     private MqttConnectMessage connectMessage(){
         MqttMessageBuilders.ConnectBuilder builder = MqttMessageBuilders.connect();
         builder.protocolVersion(MqttVersion.MQTT_3_1_1)
-                .clientId(clientId)
-                .keepAlive(keepAliveSec);
-        if (StringUtils.notEmpty(username)){
-            builder.username(username);
-            builder.password(password);
+                .clientId(info.clientId())
+                .keepAlive(info.keepAliveSec());
+        if (StringUtils.notEmpty(info.username())){
+            builder.username(info.username());
+            builder.password(info.password());
         }
 
         return builder.build();
@@ -132,6 +139,9 @@ public class ClientHandler extends SimpleChannelInboundHandler<MqttMessage> {
             MqttConnectReturnCode code = msg.variableHeader().connectReturnCode();
             if (code == MqttConnectReturnCode.CONNECTION_ACCEPTED){
                 state = CONNECTED;
+                if(logger.isInfoEnabled()) {
+                    logger.info("receive connack from server");
+                }
                 listener.onConnectSuccess(clientContext(ctx));
                 return;
             }

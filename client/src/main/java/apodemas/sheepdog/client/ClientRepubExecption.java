@@ -1,6 +1,5 @@
 package apodemas.sheepdog.client;
 
-import io.netty.util.concurrent.DefaultPromise;
 import io.netty.util.internal.ThrowableUtil;
 
 import java.util.concurrent.CancellationException;

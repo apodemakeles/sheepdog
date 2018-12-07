@@ -11,4 +11,15 @@ public class Checks {
 
         return value;
     }
+
+    public static String notEmpty(String value, String name){
+        if (name == null) {
+            throw new NullPointerException("Null name");
+        }
+        if(StringUtils.empty(value)){
+            throw new IllegalArgumentException(name + " is empty");
+        }
+
+        return value;
+    }
 }
