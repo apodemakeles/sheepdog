@@ -1,6 +1,10 @@
 package apodemas.sheepdog.example.client;
 
 import apodemas.sheepdog.client.Client;
+import apodemas.sheepdog.client.Session;
+import io.netty.handler.codec.mqtt.MqttMessageBuilders;
+import io.netty.handler.codec.mqtt.MqttQoS;
+import io.netty.handler.codec.mqtt.MqttSubscribeMessage;
 import io.netty.util.concurrent.Future;
 
 
@@ -17,9 +21,26 @@ public class Application {
         client.setClientId(prefix + id);
         client.setKeepAliveSec(10);
         client.setAuth(id, "abc".getBytes());
-        Future<?> fut = client.connect("mqtt.united-iot.com", 3883);
-        fut.await();
-        System.out.println(fut.isSuccess());
-        System.out.println(fut.cause());
+        Future<Session> connectFut = client.connect("mqtt.united-iot.com", 3883);
+
+        try {
+            Session session = connectFut.get();
+            System.out.println("connect success ");
+            MqttSubscribeMessage msg = MqttMessageBuilders.subscribe().messageId(1)
+                    .addSubscription(MqttQoS.AT_LEAST_ONCE, "mytopic")
+                    .build();
+            session.subscribe(msg).await();
+            System.out.println("sub success");
+
+        }catch (Throwable e){
+            System.out.println("connect exception : " + e);
+        }
+
+        Future<?> terFuture = client.terminationFuture();
+        terFuture.await();
+        if(terFuture.cause() != null){
+            System.out.println(terFuture.cause());
+        }
+
     }
 }
