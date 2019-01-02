@@ -28,3 +28,6 @@ hs_err_pid*
 target/
 */*.iml
 */target/
+
+*.hprof
+.DS_Store
