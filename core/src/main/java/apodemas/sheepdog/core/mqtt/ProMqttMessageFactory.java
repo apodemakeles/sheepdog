@@ -19,6 +19,20 @@ public class ProMqttMessageFactory {
                 );
     }
 
+    public static MqttSubAckMessage newSubAck(int messageId, Iterable<Integer> grantedQoSLevels){
+        return new MqttSubAckMessage(
+                defaultHeader(MqttMessageType.SUBACK, 0), //MqttEncoder will fill the "remainLength" right value
+                MqttMessageIdVariableHeader.from(messageId),
+                new MqttSubAckPayload(grantedQoSLevels)
+                );
+    }
+
+    public static MqttUnsubAckMessage newUnsubAck(int messageId){
+        return new MqttUnsubAckMessage(defaultHeader(MqttMessageType.UNSUBACK, 0),
+                MqttMessageIdVariableHeader.from(messageId)
+                );
+    }
+
     public static MqttMessage newPingreq(){
         return MqttMessageFactory.newMessage(
                 defaultHeader(MqttMessageType.PINGREQ, 0),
@@ -26,4 +40,13 @@ public class ProMqttMessageFactory {
                 null
         );
     }
+
+    public static MqttMessage newPingresp(){
+        return MqttMessageFactory.newMessage(
+                defaultHeader(MqttMessageType.PINGRESP, 0),
+                null,
+                null
+        );
+    }
+
 }
