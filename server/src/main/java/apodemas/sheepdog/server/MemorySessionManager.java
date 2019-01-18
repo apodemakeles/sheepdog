@@ -46,7 +46,7 @@ public class MemorySessionManager implements SessionManager {
             MemorySession session = new MemorySession(connectInfo.handlerContext(), clientId);
             if (sessions.containsKey(clientId)) {
                 MemorySession oldSession = sessions.get(clientId);
-                logger.warn("overlapping occurred client [%s], stopping old one", clientId);
+                logger.warn("overlapping occurred client {}, stopping old one", clientId);
                 removeSession(oldSession);
                 oldSession.closeContext();
             }
