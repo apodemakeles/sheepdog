@@ -21,7 +21,7 @@ public class Application {
         client.setClientId(prefix + id);
         client.setKeepAliveSec(10);
         client.setAuth(id, "abc".getBytes());
-        Future<Session> connectFut = client.connect("mqtt.united-iot.com", 3883);
+        Future<Session> connectFut = client.connect("127.0.0.1", 3883);
 
         try {
             Session session = connectFut.get();

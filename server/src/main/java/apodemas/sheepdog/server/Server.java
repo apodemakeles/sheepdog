@@ -27,6 +27,9 @@ public class Server {
     private EventLoopGroup workerGroup;
     private final EventLoopPromise shutdownHandler;
 
+    public Server(){
+        this(ServerSettings.DEFAULT);
+    }
 
     public Server(ServerSettings settings){
         this.settings = settings;
@@ -37,6 +40,7 @@ public class Server {
 
     public Future<Void> bind(String inetHost, int inetPort){
         ServerBootstrap bootstrap = new ServerBootstrap();
+        logger.info("server startup");
 
         return bootstrap.group(bossGroup, workerGroup)
                 .option(ChannelOption.SO_BACKLOG, 1024)
