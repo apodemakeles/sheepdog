@@ -1,4 +1,4 @@
-package apodemas.common;
+package apodemas.sheepdog.common;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -18,5 +18,18 @@ public class CollectionUtils {
         }
 
         return Optional.empty();
+    }
+
+    public static <T> int indexOf(T[] array, T value) {
+        Checks.notNull(array, "array");
+        Checks.notNull(value, "value");
+
+        for (int i = 0; i < array.length; i++) {
+            if (value.equals(array[i])) {
+                return i;
+            }
+        }
+
+        return -1;
     }
 }

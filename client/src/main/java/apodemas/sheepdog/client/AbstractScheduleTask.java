@@ -1,6 +1,6 @@
 package apodemas.sheepdog.client;
 
-import apodemas.common.Checks;
+import apodemas.sheepdog.common.Checks;
 import io.netty.channel.ChannelHandlerContext;
 
 /**

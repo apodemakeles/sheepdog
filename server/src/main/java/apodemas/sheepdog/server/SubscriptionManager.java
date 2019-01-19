@@ -1,6 +1,6 @@
 package apodemas.sheepdog.server;
 
-import apodemas.common.CollectionUtils;
+import apodemas.sheepdog.common.CollectionUtils;
 
 import java.util.*;
 

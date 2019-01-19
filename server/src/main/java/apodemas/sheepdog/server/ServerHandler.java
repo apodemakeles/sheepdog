@@ -1,6 +1,6 @@
 package apodemas.sheepdog.server;
 
-import apodemas.common.StringUtils;
+import apodemas.sheepdog.common.StringUtils;
 import apodemas.sheepdog.core.mqtt.ProMqttMessageFactory;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;

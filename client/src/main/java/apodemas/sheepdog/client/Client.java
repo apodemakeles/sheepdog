@@ -1,7 +1,7 @@
 package apodemas.sheepdog.client;
 
-import apodemas.common.Checks;
-import apodemas.common.StringUtils;
+import apodemas.sheepdog.common.Checks;
+import apodemas.sheepdog.common.StringUtils;
 import apodemas.sheepdog.core.concurrent.EventLoopPromise;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
