@@ -1,10 +1,8 @@
 package apodemas.sheepdog.server;
 
 import apodemas.sheepdog.core.concurrent.EventLoopPromise;
-import apodemas.sheepdog.http.server.DefaultHttpDispatcher;
-import apodemas.sheepdog.http.server.HttpServer;
-import apodemas.sheepdog.http.server.HttpServerSetting;
-import apodemas.sheepdog.http.server.ParameterizedPatriciaTrieRouter;
+import apodemas.sheepdog.http.server.*;
+import apodemas.sheepdog.server.http.ClientHandler;
 import apodemas.sheepdog.server.http.ClientsHandler;
 import apodemas.sheepdog.server.http.HealthCheckHandler;
 import io.netty.bootstrap.ServerBootstrap;
@@ -61,15 +59,19 @@ public class Server {
                     }
                 }).bind(inetHost, inetPort);
 
-        ParameterizedPatriciaTrieRouter router = new ParameterizedPatriciaTrieRouter();
-        router.add("/healthcheck", new HealthCheckHandler());
-        router.add("/clients", new ClientsHandler(manager));
-        DefaultHttpDispatcher dispatcher = new DefaultHttpDispatcher(router);
-
-        HttpServer server = new HttpServer(inetHost, 1885, new HttpServerSetting(), dispatcher);
+        HttpServer server = buildHttpServer(inetHost, manager);
         server.start();
 
         return channelFuture;
+    }
+
+    private HttpServer buildHttpServer(String inetHost, SessionManager manager){
+        ParameterizedPatriciaTrieRouter router = new ParameterizedPatriciaTrieRouter();
+        router.add("/healthcheck", new HealthCheckHandler());
+        router.add("/clients", new ClientsHandler(manager));
+        router.add("/clients/:id", new ClientHandler(manager));
+
+        return new HttpServer(inetHost, 1885, new HttpServerSetting(), new DefaultHttpDispatcher(router));
     }
 
     public Future<?> terminationFuture(){

@@ -1,6 +1,7 @@
 package apodemas.sheepdog.http.server;
 
 import apodemas.sheepdog.common.StringUtils;
+import apodemas.sheepdog.http.server.requst.HttpRequestHandler;
 
 import java.util.Arrays;
 

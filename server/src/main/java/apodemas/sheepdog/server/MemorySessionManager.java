@@ -43,21 +43,31 @@ public class MemorySessionManager implements SessionManager {
 
     public Future<List<ClientSessionInfo>> sessions(Promise<List<ClientSessionInfo>> promise){
         safeExecute(()->{
-            promise.trySuccess(doGetAllSessionInfo());
+            List<ClientSessionInfo> results = new ArrayList<>();
+            for(MemorySession item : sessions.values()){
+                List<Subscription> subscriptions = subManager.getSessionSubscriptions(item);
+                ClientSessionInfo info = new ClientSessionInfo(item.clientId, subscriptions);
+                results.add(info);
+            }
+
+            promise.trySuccess(results);
         });
 
         return promise;
     }
 
-    private List<ClientSessionInfo> doGetAllSessionInfo(){
-        List<ClientSessionInfo> results = new ArrayList<>();
-        for(MemorySession item : sessions.values()){
-            List<Subscription> subscriptions = subManager.getSessionSubscriptions(item);
-            ClientSessionInfo info = new ClientSessionInfo(item.clientId, subscriptions);
-            results.add(info);
-        }
+    public Future<ClientSessionInfo> findSession(String clientId, Promise<ClientSessionInfo> promise){
+        safeExecute(()->{
+            MemorySession session = sessions.get(clientId);
+            if(session != null) {
+                List<Subscription> subscriptions = subManager.getSessionSubscriptions(session);
+                promise.trySuccess(new ClientSessionInfo(clientId, subscriptions));
+            }else{
+                promise.trySuccess(null);
+            }
+        });
 
-        return results;
+        return promise;
     }
 
     private void doCreate(ConnectInfo connectInfo, Promise<Session> promise){

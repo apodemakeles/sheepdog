@@ -1,5 +1,6 @@
-package apodemas.sheepdog.http.server;
+package apodemas.sheepdog.http.server.requst;
 
+import apodemas.sheepdog.http.server.HttpContext;
 import io.netty.handler.codec.http.HttpMethod;
 
 /**

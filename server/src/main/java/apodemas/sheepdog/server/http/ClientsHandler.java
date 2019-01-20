@@ -1,7 +1,7 @@
 package apodemas.sheepdog.server.http;
 
-import apodemas.sheepdog.http.server.GetRequestHandler;
 import apodemas.sheepdog.http.server.HttpContext;
+import apodemas.sheepdog.http.server.requst.JSONGetRequestHandler;
 import apodemas.sheepdog.http.server.JsonErrorMessage;
 import apodemas.sheepdog.server.ClientSessionInfo;
 import apodemas.sheepdog.server.SessionManager;
@@ -13,16 +13,11 @@ import java.util.List;
  * @author caozheng
  * @time 2019-01-19 11:26
  **/
-public class ClientsHandler extends GetRequestHandler {
+public class ClientsHandler extends JSONGetRequestHandler {
     private final SessionManager manager;
 
     public ClientsHandler(SessionManager manager) {
         this.manager = manager;
-    }
-
-    @Override
-    public String[] supportContentTypes() {
-        return new String[]{"application/json"};
     }
 
     @Override
