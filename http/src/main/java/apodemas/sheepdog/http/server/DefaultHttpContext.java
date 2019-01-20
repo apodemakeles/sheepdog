@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.util.concurrent.Promise;
 
 /**
  * @author caozheng
@@ -42,6 +43,10 @@ public class DefaultHttpContext implements HttpContext {
         return this.method;
     }
 
+    public <T> Promise<T> newPromise(){
+        return ctx.executor().newPromise();
+    }
+
     public HttpHeaders headers() {
         return this.headers;
     }
@@ -69,4 +74,6 @@ public class DefaultHttpContext implements HttpContext {
     public void json(HttpResponseStatus status, HttpHeaders headers, Object msg) {
         writer.json(status, headers, msg);
     }
+
+
 }

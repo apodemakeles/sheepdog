@@ -3,6 +3,7 @@ package apodemas.sheepdog.http.server;
 import apodemas.sheepdog.common.url.URLParameters;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.util.concurrent.Promise;
 
 /**
  * @author caozheng
@@ -11,6 +12,7 @@ import io.netty.handler.codec.http.HttpMethod;
 public interface HttpContext extends HttpResponseWriter {
     String path();
     HttpMethod method();
+    <T> Promise<T> newPromise();
     HttpHeaders headers();
     Object msg();
     PathParams pathParams();

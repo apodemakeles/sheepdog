@@ -1,11 +1,14 @@
 package apodemas.sheepdog.server;
 
 import apodemas.sheepdog.core.concurrent.EventLoopPromise;
+import apodemas.sheepdog.http.server.DefaultHttpDispatcher;
+import apodemas.sheepdog.http.server.HttpServer;
+import apodemas.sheepdog.http.server.HttpServerSetting;
+import apodemas.sheepdog.http.server.ParameterizedPatriciaTrieRouter;
+import apodemas.sheepdog.server.http.ClientsHandler;
+import apodemas.sheepdog.server.http.HealthCheckHandler;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -38,11 +41,13 @@ public class Server {
         this.shutdownHandler = new EventLoopPromise(GlobalEventExecutor.INSTANCE);
     }
 
+
     public Future<Void> bind(String inetHost, int inetPort){
         ServerBootstrap bootstrap = new ServerBootstrap();
         logger.info("server startup");
 
-        return bootstrap.group(bossGroup, workerGroup)
+        MemorySessionManager manager = new MemorySessionManager();
+        ChannelFuture channelFuture = bootstrap.group(bossGroup, workerGroup)
                 .option(ChannelOption.SO_BACKLOG, 1024)
                 .channel(NioServerSocketChannel.class)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -51,10 +56,20 @@ public class Server {
                         ChannelPipeline pipe = ch.pipeline();
                         pipe.addLast("mqtt encoder", MqttEncoder.INSTANCE);
                         pipe.addLast("mqtt decoder", new MqttDecoder());
-                        ServerHandler serverHandler = new ServerHandler(settings, new DefaultMessageProcessor(), new MemorySessionManager());
+                        ServerHandler serverHandler = new ServerHandler(settings, new DefaultMessageProcessor(), manager);
                         pipe.addLast(ServerHandler.NAME, serverHandler);
                     }
                 }).bind(inetHost, inetPort);
+
+        ParameterizedPatriciaTrieRouter router = new ParameterizedPatriciaTrieRouter();
+        router.add("/healthcheck", new HealthCheckHandler());
+        router.add("/clients", new ClientsHandler(manager));
+        DefaultHttpDispatcher dispatcher = new DefaultHttpDispatcher(router);
+
+        HttpServer server = new HttpServer(inetHost, 1885, new HttpServerSetting(), dispatcher);
+        server.start();
+
+        return channelFuture;
     }
 
     public Future<?> terminationFuture(){

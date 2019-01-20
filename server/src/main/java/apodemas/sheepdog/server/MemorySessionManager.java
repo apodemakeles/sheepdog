@@ -12,6 +12,7 @@ import io.netty.util.concurrent.Promise;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,25 @@ public class MemorySessionManager implements SessionManager {
         return promise;
     }
 
+    public Future<List<ClientSessionInfo>> sessions(Promise<List<ClientSessionInfo>> promise){
+        safeExecute(()->{
+            promise.trySuccess(doGetAllSessionInfo());
+        });
+
+        return promise;
+    }
+
+    private List<ClientSessionInfo> doGetAllSessionInfo(){
+        List<ClientSessionInfo> results = new ArrayList<>();
+        for(MemorySession item : sessions.values()){
+            List<Subscription> subscriptions = subManager.getSessionSubscriptions(item);
+            ClientSessionInfo info = new ClientSessionInfo(item.clientId, subscriptions);
+            results.add(info);
+        }
+
+        return results;
+    }
+
     private void doCreate(ConnectInfo connectInfo, Promise<Session> promise){
         String clientId = connectInfo.clientId();
         try {
@@ -58,7 +78,7 @@ public class MemorySessionManager implements SessionManager {
         }
     }
 
-    private void doSub(MemorySession session, List<MqttMutableTopicSubscription> subscriptions,
+    private void doSub(MemorySession session, List<Subscription> subscriptions,
                        Promise<List<Integer>> promise){
         String clientId = session.clientId();
         if(!sessions.containsKey(clientId)){
@@ -91,7 +111,7 @@ public class MemorySessionManager implements SessionManager {
         });
     }
 
-    private void subscribeTopic(MemorySession session, List<MqttMutableTopicSubscription> subscriptions,
+    private void subscribeTopic(MemorySession session, List<Subscription> subscriptions,
                            Promise<List<Integer>> promise){
         safeExecute(()->{
             doSub(session, subscriptions, promise);
@@ -151,7 +171,7 @@ public class MemorySessionManager implements SessionManager {
         @Override
         public Future<List<Integer>> subscribe(MqttSubscribeMessage message, Promise<List<Integer>> promise){
             List<MqttTopicSubscription> originalSubs = message.payload().topicSubscriptions();
-            List<MqttMutableTopicSubscription> subs = MqttMutableTopicSubscription.form(originalSubs);
+            List<Subscription> subs = Subscription.fromMqttTopicSubscription(originalSubs);
             MemorySessionManager.this.subscribeTopic(this, subs, promise);
 
             return promise;

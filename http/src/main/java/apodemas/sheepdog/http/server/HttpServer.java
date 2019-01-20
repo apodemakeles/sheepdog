@@ -35,7 +35,7 @@ public class HttpServer {
     }
 
     public String id(){
-        return "Chopin Http Server";
+        return "sheepdog http server";
     }
 
     public Future<Void> start(){

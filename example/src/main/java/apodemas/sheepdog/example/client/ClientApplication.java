@@ -12,7 +12,7 @@ import io.netty.util.concurrent.Future;
  * @author caozheng
  * @time 2018-12-07 14:19
  **/
-public class Application {
+public class ClientApplication {
     public static void main(String[] args) throws Exception{
         String prefix = "ABCDEF1234567890";
         String id = "6340299262395416576";

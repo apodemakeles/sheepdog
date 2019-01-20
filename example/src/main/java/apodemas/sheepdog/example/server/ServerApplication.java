@@ -9,7 +9,7 @@ import io.netty.util.concurrent.Future;
  * @author caozheng
  * @time 2019-01-16 14:47
  **/
-public class Application {
+public class ServerApplication {
     public static void main(String[] args) throws Exception{
         ServerSettings serverSettings = new ServerSettings();
         serverSettings.setIdPrefix("ABCDEF1234567890");

@@ -9,34 +9,39 @@ import java.util.*;
  * @time 2019-01-15 15:50
  **/
 public class SubscriptionManager {
-    private final Map<String, List<MqttMutableTopicSubscription>> sessionTopicMap = new HashMap<>(256);
+    private final Map<String, List<Subscription>> sessionTopicMap = new HashMap<>(256);
     private final Map<String, List<Session>> topicSessionMap = new HashMap<>(256);
 
     public void clean(Session session){
         String clientId = session.clientId();
         if (sessionTopicMap.containsKey(clientId)) {
-            for(MqttMutableTopicSubscription sub : sessionTopicMap.get(clientId)){
-                topicSessionMap.remove(sub.topicName(), session);
+            for(Subscription sub : sessionTopicMap.get(clientId)){
+                topicSessionMap.remove(sub.getTopic(), session);
             }
         }
     }
 
-    public List<Integer> subscribe(Session session, List<MqttMutableTopicSubscription> subscriptions) {
-        List<MqttMutableTopicSubscription> subs = sessionTopicMap.get(session.clientId());
-        if(subs == null) {
+    public List<Integer> subscribe(Session session, List<Subscription> subscriptions) {
+        if (subscriptions == null || subscriptions.size() == 0) {
+            return new ArrayList<>();
+        }
+
+        List<Subscription> subs = sessionTopicMap.get(session.clientId());
+        if (subs == null) {
             subs = new ArrayList<>();
+            sessionTopicMap.put(session.clientId(), subs);
         }
         List<Integer> results = new ArrayList<>(subscriptions.size());
-        for(MqttMutableTopicSubscription toSub : subscriptions){
-            Optional<MqttMutableTopicSubscription> fromSub = CollectionUtils.findFirst(subs,
-                    (MqttMutableTopicSubscription item)-> item.topicName().equals(toSub.topicName()));
-            if(fromSub.isPresent()){
-                fromSub.get().setQualityOfService(toSub.qualityOfService()); //override qos
-            }else{
+        for (Subscription toSub : subscriptions) {
+            Optional<Subscription> fromSub = CollectionUtils.findFirst(subs,
+                    (Subscription item) -> item.topicEquals(toSub));
+            if (fromSub.isPresent()) {
+                fromSub.get().setQos(toSub.getQos()); //override getQos
+            } else {
                 subs.add(toSub);
-                saveTopicSessionMapping(toSub.topicName(), session);
+                saveTopicSessionMapping(toSub.getTopic(), session);
             }
-            results.add(toSub.qualityOfService().value());
+            results.add(toSub.qosValue());
         }
 
         return results;
@@ -47,16 +52,16 @@ public class SubscriptionManager {
             List<Session> sessions = topicSessionMap.get(topic);
             if(sessions != null) {
                 if(sessions.removeIf(item -> item.clientId().equals(session.clientId()))){
-                    List<MqttMutableTopicSubscription> subscriptions = sessionTopicMap.get(session.clientId());
+                    List<Subscription> subscriptions = sessionTopicMap.get(session.clientId());
                     if(subscriptions != null){
-                        subscriptions.removeIf(sub->sub.topicName().equals(topic));
+                        subscriptions.removeIf(sub->sub.getQos().equals(topic));
                     }
                 }
             }
         }
     }
 
-    public List<MqttMutableTopicSubscription> getSessionSubscriptions(Session session){
+    public List<Subscription> getSessionSubscriptions(Session session){
         return sessionTopicMap.get(session.clientId());
     }
 
@@ -68,6 +73,7 @@ public class SubscriptionManager {
         List<Session> subSessions = topicSessionMap.get(topic);
         if(subSessions == null){
             subSessions = new ArrayList<>();
+            topicSessionMap.put(topic, subSessions);
         }
         Optional<Session> fromSess = CollectionUtils.findFirst(subSessions,
                 (Session item)->item.clientId().equals(session.clientId()));
