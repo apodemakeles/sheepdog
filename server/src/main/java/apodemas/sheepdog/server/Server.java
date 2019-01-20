@@ -5,6 +5,7 @@ import apodemas.sheepdog.http.server.*;
 import apodemas.sheepdog.server.http.ClientHandler;
 import apodemas.sheepdog.server.http.ClientsHandler;
 import apodemas.sheepdog.server.http.HealthCheckHandler;
+import apodemas.sheepdog.server.http.SubscriptionsHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -70,6 +71,7 @@ public class Server {
         router.add("/healthcheck", new HealthCheckHandler());
         router.add("/clients", new ClientsHandler(manager));
         router.add("/clients/:id", new ClientHandler(manager));
+        router.add("/topics/:topic", new SubscriptionsHandler(manager));
 
         return new HttpServer(inetHost, 1885, new HttpServerSetting(), new DefaultHttpDispatcher(router));
     }

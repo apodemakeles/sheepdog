@@ -65,12 +65,30 @@ public class Subscription {
                 .toString();
     }
 
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        return new Subscription(topic, qos);
+    }
+
     public static List<Subscription> fromMqttTopicSubscription(List<MqttTopicSubscription> originalSubs){
         List<Subscription> results = new ArrayList<>();
         for(MqttTopicSubscription orgSub : originalSubs){
             Subscription sub
                     = new Subscription(orgSub.topicName(), orgSub.qualityOfService());
             results.add(sub);
+        }
+
+        return results;
+    }
+
+    public static List<Subscription> clone(List<Subscription> originalSubs){
+        List<Subscription> results = new ArrayList<>();
+        for(Subscription sub : originalSubs){
+            try {
+                results.add((Subscription) sub.clone());
+            }catch (CloneNotSupportedException e){
+
+            }
         }
 
         return results;

@@ -1,5 +1,6 @@
 package apodemas.sheepdog.server.http;
 
+import apodemas.sheepdog.common.StringUtils;
 import apodemas.sheepdog.http.server.HttpContext;
 import apodemas.sheepdog.http.server.requst.JSONGetRequestHandler;
 import apodemas.sheepdog.server.ClientSessionInfo;
@@ -10,18 +11,23 @@ import java.util.List;
 
 /**
  * @author caozheng
- * @time 2019-01-19 11:26
+ * @time 2019-01-20 20:26
  **/
-public class ClientsHandler extends JSONGetRequestHandler {
+public class SubscriptionsHandler extends JSONGetRequestHandler {
     private final SessionManager manager;
 
-    public ClientsHandler(SessionManager manager) {
+    public SubscriptionsHandler(SessionManager manager) {
         this.manager = manager;
     }
 
     @Override
     public void handle(HttpContext context) {
-        manager.sessions(context.newPromise())
+        String topic = context.pathParams().get("topic");
+        if(StringUtils.empty(topic)){
+            BAD_REQUEST(context, "topic is required");
+        }
+
+        manager.findSubscription(topic, context.newPromise())
                 .addListener((Future<List<ClientSessionInfo>> fut)->{
                     if(fut.isSuccess()){
                         context.json(fut.get());
@@ -30,4 +36,5 @@ public class ClientsHandler extends JSONGetRequestHandler {
                     }
                 });
     }
+
 }

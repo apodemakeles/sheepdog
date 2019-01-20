@@ -61,10 +61,30 @@ public class MemorySessionManager implements SessionManager {
             MemorySession session = sessions.get(clientId);
             if(session != null) {
                 List<Subscription> subscriptions = subManager.getSessionSubscriptions(session);
-                promise.trySuccess(new ClientSessionInfo(clientId, subscriptions));
+                promise.trySuccess(new ClientSessionInfo(clientId, Subscription.clone(subscriptions)));
             }else{
                 promise.trySuccess(null);
             }
+        });
+
+        return promise;
+    }
+
+    @Override
+    public Future<List<ClientSessionInfo>> findSubscription(String topic, Promise<List<ClientSessionInfo>> promise) {
+        safeExecute(()->{
+            List<Session> sess = subManager.getTopicSubSessions(topic);
+            if(sess == null){
+                sess = new ArrayList<>();
+            }
+
+            List<ClientSessionInfo> results = new ArrayList<>();
+            for(Session session : sess){
+                results.add(new ClientSessionInfo(session.clientId(), null));
+            }
+
+            promise.trySuccess(results);
+
         });
 
         return promise;

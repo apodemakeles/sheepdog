@@ -24,15 +24,19 @@ public class ClientHandler extends JSONGetRequestHandler {
     public void handle(HttpContext context) {
         String clientId = context.pathParams().get("id");
         if(StringUtils.empty(clientId)){
-            context.json(HttpResponseStatus.BAD_REQUEST,
-                    new JsonErrorMessage(HttpResponseStatus.BAD_REQUEST.code(), "id is required"));
+            BAD_REQUEST(context, "id is required");
         }else{
-            manager.findSession(clientId, context.<ClientSessionInfo>newPromise())
+            manager.findSession(clientId, context.newPromise())
                     .addListener((Future<ClientSessionInfo> fut)->{
                        if(fut.isSuccess()){
-                           context.json(fut.get());
+                           ClientSessionInfo info = fut.get();
+                           if(info == null){
+                               NOT_FOUND(context, "client");
+                           }else {
+                               context.json(info);
+                           }
                        }else{
-                           context.json(new JsonErrorMessage(500, fut.cause().getMessage()));
+                           INTERNAL_SERVER_ERROR(context, fut.cause());
                        }
                     });
         }
