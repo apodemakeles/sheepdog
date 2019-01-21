@@ -2,10 +2,7 @@ package apodemas.sheepdog.server;
 
 import apodemas.sheepdog.core.concurrent.EventLoopPromise;
 import apodemas.sheepdog.http.server.*;
-import apodemas.sheepdog.server.http.ClientHandler;
-import apodemas.sheepdog.server.http.ClientsHandler;
-import apodemas.sheepdog.server.http.HealthCheckHandler;
-import apodemas.sheepdog.server.http.SubscriptionsHandler;
+import apodemas.sheepdog.server.http.*;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -72,6 +69,7 @@ public class Server {
         router.add("/clients", new ClientsHandler(manager));
         router.add("/clients/:id", new ClientHandler(manager));
         router.add("/topics/:topic", new SubscriptionsHandler(manager));
+        router.add("/disconnect/:id", new DisconnectHandler(manager));
 
         return new HttpServer(inetHost, 1885, new HttpServerSetting(), new DefaultHttpDispatcher(router));
     }

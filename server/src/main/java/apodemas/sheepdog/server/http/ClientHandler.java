@@ -2,11 +2,9 @@ package apodemas.sheepdog.server.http;
 
 import apodemas.sheepdog.common.StringUtils;
 import apodemas.sheepdog.http.server.HttpContext;
-import apodemas.sheepdog.http.server.JsonErrorMessage;
 import apodemas.sheepdog.http.server.requst.JSONGetRequestHandler;
 import apodemas.sheepdog.server.ClientSessionInfo;
 import apodemas.sheepdog.server.SessionManager;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.util.concurrent.Future;
 
 /**
@@ -26,12 +24,12 @@ public class ClientHandler extends JSONGetRequestHandler {
         if(StringUtils.empty(clientId)){
             BAD_REQUEST(context, "id is required");
         }else{
-            manager.findSession(clientId, context.newPromise())
+            manager.getClientInfo(clientId, context.newPromise())
                     .addListener((Future<ClientSessionInfo> fut)->{
                        if(fut.isSuccess()){
                            ClientSessionInfo info = fut.get();
                            if(info == null){
-                               NOT_FOUND(context, "client");
+                               NOT_FOUND(context, clientId);
                            }else {
                                context.json(info);
                            }

@@ -56,7 +56,15 @@ public class MemorySessionManager implements SessionManager {
         return promise;
     }
 
-    public Future<ClientSessionInfo> findSession(String clientId, Promise<ClientSessionInfo> promise){
+    public Future<Session> findSession(String clientId, Promise<Session> promise){
+        safeExecute(()->{
+            promise.trySuccess(sessions.get(clientId));
+        });
+
+        return promise;
+    }
+
+    public Future<ClientSessionInfo> getClientInfo(String clientId, Promise<ClientSessionInfo> promise){
         safeExecute(()->{
             MemorySession session = sessions.get(clientId);
             if(session != null) {
