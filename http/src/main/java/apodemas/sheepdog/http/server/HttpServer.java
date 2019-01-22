@@ -35,7 +35,7 @@ public class HttpServer {
     }
 
     public String id(){
-        return "sheepdog http server";
+        return "sheepdog api server";
     }
 
     public Future<Void> start(){

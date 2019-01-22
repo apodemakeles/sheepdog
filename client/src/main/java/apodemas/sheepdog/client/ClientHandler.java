@@ -2,8 +2,11 @@ package apodemas.sheepdog.client;
 
 import apodemas.sheepdog.common.Checks;
 import apodemas.sheepdog.common.StringUtils;
+import apodemas.sheepdog.core.AbstractScheduleTask;
+import apodemas.sheepdog.core.retry.RetryScheduler;
 import apodemas.sheepdog.core.concurrent.EventLoopPromise;
 import apodemas.sheepdog.core.mqtt.ProMqttMessageFactory;
+import apodemas.sheepdog.core.retry.RetryException;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
@@ -298,7 +301,8 @@ public class ClientHandler extends SimpleChannelInboundHandler<MqttMessage> impl
         int messageId = msg.variableHeader().packetId();
         if (ack && qos.value() > MqttQoS.AT_MOST_ONCE.value() && messageId > 0) {
             MqttPubAckMessage pubAckMessage = ProMqttMessageFactory.newPubAck(messageId);
-            ctx.write(pubAckMessage);
+            System.out.println("pub ack" + messageId + ".........");
+            ctx.writeAndFlush(pubAckMessage);
         }
     }
 
@@ -382,7 +386,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<MqttMessage> impl
         }
     }
 
-    private static class RepubScheduler extends RetryScheduler<MqttPublishMessage, Integer>{
+    private static class RepubScheduler extends RetryScheduler<MqttPublishMessage, Integer> {
         public RepubScheduler(EventExecutor executor, ClientSettings settings) {
             super(executor, settings.maxRepubTimes(), settings.maxRepubQueueSize());
         }

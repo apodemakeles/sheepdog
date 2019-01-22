@@ -21,7 +21,7 @@ public class URLParser {
     private final ParsingState startState;
 
     private static final List<String> RELATIVE_SCHEMES = Arrays.asList(
-            "ftp", "file", "gopher", "http", "https", "ws", "wss"
+            "ftp", "file", "gopher", "api", "https", "ws", "wss"
     );
 
     public URLParser(String input){

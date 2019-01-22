@@ -62,7 +62,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
             onConnect(ctx, (MqttConnectMessage)msg);
         }else if(state == CONNECTED && session != null){
             switch (msgType){
-                case PUBLISH:
+                case PUBACK:
+                    onPubAck(ctx, (MqttPubAckMessage)msg);
                     break;
                 case SUBSCRIBE:
                     onSubscribe(ctx, (MqttSubscribeMessage)msg);
@@ -72,13 +73,19 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
                     break;
                 case PINGREQ:
                     session.writeAndFlush(ProMqttMessageFactory.newPingresp());
-                    if(logger.isInfoEnabled()){
-                        logger.info("client ({}) ping", session.clientId());
+                    if(logger.isDebugEnabled()){
+                        logger.debug("client ({}) ping", session.clientId());
                     }
                     break;
                 case DISCONNECT:
                     session.disconnect();
                     break;
+                default:
+                    if(logger.isInfoEnabled()){
+                        logger.info("unexpected message type {}", msgType);
+                    }
+                    break;
+
             }
         }
     }
@@ -170,6 +177,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
                         ctx.close();
                     }
                 });
+    }
+
+    private void onPubAck(ChannelHandlerContext ctx, MqttPubAckMessage msg){
+        session.ack(msg);
     }
 
     private void onSubscribe(ChannelHandlerContext ctx, MqttSubscribeMessage msg){

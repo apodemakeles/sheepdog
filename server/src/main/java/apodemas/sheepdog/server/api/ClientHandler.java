@@ -1,4 +1,4 @@
-package apodemas.sheepdog.server.http;
+package apodemas.sheepdog.server.api;
 
 import apodemas.sheepdog.common.StringUtils;
 import apodemas.sheepdog.http.server.HttpContext;

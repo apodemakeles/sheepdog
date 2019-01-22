@@ -3,10 +3,7 @@ package apodemas.sheepdog.server;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.DefaultEventLoop;
 import io.netty.channel.EventLoop;
-import io.netty.handler.codec.mqtt.MqttMessage;
-import io.netty.handler.codec.mqtt.MqttSubscribeMessage;
-import io.netty.handler.codec.mqtt.MqttTopicSubscription;
-import io.netty.handler.codec.mqtt.MqttUnsubscribeMessage;
+import io.netty.handler.codec.mqtt.*;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
 import io.netty.util.internal.logging.InternalLogger;
@@ -28,9 +25,11 @@ public class MemorySessionManager implements SessionManager {
     private final Map<String, MemorySession> sessions = new HashMap<>(256);
     private final SubscriptionManager subManager = new SubscriptionManager();
     private final EventLoop eventLoop;
+    private final ServerSettings serverSettings;
 
-    public MemorySessionManager(){
-        eventLoop = new DefaultEventLoop();
+    public MemorySessionManager(ServerSettings serverSettings) {
+        this.eventLoop = new DefaultEventLoop();
+        this.serverSettings = serverSettings;
     }
 
     public Future<Session> createSession(ConnectInfo connectInfo, Promise<Session> promise){
@@ -98,10 +97,21 @@ public class MemorySessionManager implements SessionManager {
         return promise;
     }
 
+    @Override
+    public Future<List<Session>> findSessionByTopic(String topic, Promise<List<Session>> promise){
+        safeExecute(()->{
+            promise.trySuccess(subManager.getTopicSubSessions(topic));
+        });
+
+        return promise;
+    }
+
     private void doCreate(ConnectInfo connectInfo, Promise<Session> promise){
         String clientId = connectInfo.clientId();
+        ChannelHandlerContext ctx = connectInfo.handlerContext();
         try {
-            MemorySession session = new MemorySession(connectInfo.handlerContext(), clientId);
+            PublishController pubCtrl = new PublishController(ctx, serverSettings);
+            MemorySession session = new MemorySession(ctx, clientId, pubCtrl);
             if (sessions.containsKey(clientId)) {
                 MemorySession oldSession = sessions.get(clientId);
                 logger.warn("overlapping occurred client {}, stopping old one", clientId);
@@ -174,10 +184,12 @@ public class MemorySessionManager implements SessionManager {
         private final ChannelHandlerContext ctx;
         private final String clientId;
         private final AtomicBoolean disconnected = new AtomicBoolean(false);
+        private final PublishController pubCtrl;
 
-        public MemorySession(ChannelHandlerContext ctx, String clientId) {
+        public MemorySession(ChannelHandlerContext ctx, String clientId, PublishController pubCtrl) {
             this.ctx = ctx;
             this.clientId = clientId;
+            this.pubCtrl = pubCtrl;
         }
 
         public void closeContext(){
@@ -197,6 +209,16 @@ public class MemorySessionManager implements SessionManager {
         @Override
         public void writeAndFlush(MqttMessage message){
             ctx.writeAndFlush(message);
+        }
+
+        @Override
+        public void publish(PublishMessageTemplate template){
+            pubCtrl.publish(template);
+        }
+
+        @Override
+        public void ack(MqttPubAckMessage message){
+            pubCtrl.ack(message);
         }
 
         @Override

@@ -2,7 +2,7 @@ package apodemas.sheepdog.server;
 
 import apodemas.sheepdog.core.concurrent.EventLoopPromise;
 import apodemas.sheepdog.http.server.*;
-import apodemas.sheepdog.server.http.*;
+import apodemas.sheepdog.server.api.*;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -42,7 +42,7 @@ public class Server {
         ServerBootstrap bootstrap = new ServerBootstrap();
         logger.info("server startup");
 
-        MemorySessionManager manager = new MemorySessionManager();
+        MemorySessionManager manager = new MemorySessionManager(settings);
         ChannelFuture channelFuture = bootstrap.group(bossGroup, workerGroup)
                 .option(ChannelOption.SO_BACKLOG, 1024)
                 .channel(NioServerSocketChannel.class)
@@ -70,6 +70,7 @@ public class Server {
         router.add("/clients/:id", new ClientHandler(manager));
         router.add("/topics/:topic", new SubscriptionsHandler(manager));
         router.add("/disconnect/:id", new DisconnectHandler(manager));
+        router.add("/admin/pub/:topic/:msg", new PublishHandler(manager));
 
         return new HttpServer(inetHost, 1885, new HttpServerSetting(), new DefaultHttpDispatcher(router));
     }

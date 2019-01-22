@@ -1,4 +1,4 @@
-package apodemas.sheepdog.client;
+package apodemas.sheepdog.core.retry;
 
 /**
  * @author caozheng
@@ -6,6 +6,9 @@ package apodemas.sheepdog.client;
  **/
 
 import apodemas.sheepdog.core.FixedLinkedQueue;
+import apodemas.sheepdog.core.retry.RetryScheduler;
+import apodemas.sheepdog.core.retry.RetryException;
+import apodemas.sheepdog.core.retry.RetryFailReason;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.DefaultEventExecutor;
 import io.netty.util.concurrent.EventExecutor;
@@ -40,7 +43,7 @@ public class RetrySchedulerTest {
         }
     }
 
-    private static class TestingRetryScheduler extends RetryScheduler<Message, Integer>{
+    private static class TestingRetryScheduler extends RetryScheduler<Message, Integer> {
         public TestingRetryScheduler(EventExecutor executor, int maxRetryTimes, FixedLinkedQueue queue) {
             super(executor, maxRetryTimes, queue);
         }

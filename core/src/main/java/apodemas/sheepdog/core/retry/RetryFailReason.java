@@ -1,4 +1,4 @@
-package apodemas.sheepdog.client;
+package apodemas.sheepdog.core.retry;
 
 /**
  * @author caozheng

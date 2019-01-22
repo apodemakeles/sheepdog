@@ -1,4 +1,4 @@
-package apodemas.sheepdog.server.http;
+package apodemas.sheepdog.server.api;
 
 import apodemas.sheepdog.common.StringUtils;
 import apodemas.sheepdog.http.server.HttpContext;
@@ -25,6 +25,7 @@ public class SubscriptionsHandler extends JSONGetRequestHandler {
         String topic = context.pathParams().get("topic");
         if(StringUtils.empty(topic)){
             BAD_REQUEST(context, "topic is required");
+            return;
         }
 
         manager.findSubscription(topic, context.newPromise())

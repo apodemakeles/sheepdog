@@ -2,6 +2,7 @@ package apodemas.sheepdog.http.server;
 
 import apodemas.sheepdog.common.url.URLParameters;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;

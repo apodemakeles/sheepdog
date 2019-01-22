@@ -1,4 +1,4 @@
-package apodemas.sheepdog.server.http;
+package apodemas.sheepdog.server.api;
 
 import apodemas.sheepdog.http.server.HttpContext;
 import apodemas.sheepdog.http.server.requst.JSONGetRequestHandler;

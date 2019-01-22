@@ -150,12 +150,12 @@ public class URLUtils {
     }
 
     private static final List<String> RELATIVE_SCHEMES = Arrays.asList(
-            "ftp", "file", "gopher", "http", "https", "ws", "wss"
+            "ftp", "file", "gopher", "api", "https", "ws", "wss"
     );
 
     /**
      * Returns true if the schema is a known relative schema
-     * (ftp, file, gopher, http, https, ws, wss).
+     * (ftp, file, gopher, api, https, ws, wss).
      *
      * @param scheme
      * @return
@@ -171,7 +171,7 @@ public class URLUtils {
      *     <li>ftp - 21</li>
      *     <li>file - null</li>
      *     <li>gopher - 70</li>
-     *     <li>http - 80</li>
+     *     <li>api - 80</li>
      *     <li>https - 443</li>
      *     <li>ws - 80</li>
      *     <li>wss - 433</li>
@@ -190,7 +190,7 @@ public class URLUtils {
         if ("gopher".equals(scheme)) {
             return "70";
         }
-        if ("http".equals(scheme)) {
+        if ("api".equals(scheme)) {
             return "80";
         }
         if ("https".equals(scheme)) {

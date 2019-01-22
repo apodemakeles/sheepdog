@@ -1,5 +1,6 @@
-package apodemas.sheepdog.client;
+package apodemas.sheepdog.core.retry;
 
+import apodemas.sheepdog.core.AbstractScheduleTask;
 import apodemas.sheepdog.core.FixedLinkedQueue;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.EventExecutor;
@@ -29,11 +30,11 @@ public abstract class RetryScheduler<T, K> {
         this(executor, maxRetryTimes, new FixedLinkedQueue<>(maxRetryQueueSize));
     }
 
-    public void done(K id){
-        if(executor.inEventLoop()){
+    public void done(K id) {
+        if (executor.inEventLoop()) {
             doneInternal(id);
-        }else{
-            executor.submit(()->{
+        } else {
+            executor.submit(() -> {
                 doneInternal(id);
             });
         }
@@ -72,7 +73,7 @@ public abstract class RetryScheduler<T, K> {
         if((entry = queue.findFirst(new EqualPredict(id), true)) != null) {
             entry.task.cancel(false);
             if (entry.promise != null) {
-                entry.promise.trySuccess(null);
+                entry.promise.trySuccess(entry.value);
             }
         }
     }
@@ -90,8 +91,9 @@ public abstract class RetryScheduler<T, K> {
 
             Entry oldEntry = queue.enqueue(entry);
             if(oldEntry != null){
+                oldEntry.task.cancel(false);
                 if(oldEntry.promise != null){
-                    oldEntry.promise.tryFailure(new RetryException(value, RetryFailReason.QUEUE_EXCEED_LIMIT));
+                    oldEntry.promise.tryFailure(new RetryException(oldEntry.value, RetryFailReason.QUEUE_EXCEED_LIMIT));
                 }
             }
 
@@ -125,7 +127,7 @@ public abstract class RetryScheduler<T, K> {
         }
     }
 
-    private class RetryTask extends AbstractScheduleTask{
+    private class RetryTask extends AbstractScheduleTask {
         private final Entry entry;
         private final long delay;
         private final TimeUnit unit;
