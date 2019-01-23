@@ -80,7 +80,7 @@ public class PublishController {
                         if(e.reason() == RetryFailReason.QUEUE_EXCEED_LIMIT){
                             logger.warn("republish queue is full, message (id:{}) be removed", id);
                         }else if(logger.isInfoEnabled()) {
-                            logger.debug("republish message (id: {}) failed due to %s", id, e.reason());
+                            logger.info("republish message (id: {}) failed due to {}", id, e.reason());
                         }
                     }
                 }
@@ -115,6 +115,7 @@ public class PublishController {
 
         @Override
         protected void retry(ChannelHandlerContext ctx, Integer id, MqttPublishMessage value) {
+            value.retain();
             outInvoker.write(value);
         }
     }
