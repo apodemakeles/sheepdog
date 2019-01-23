@@ -5,6 +5,7 @@ import apodemas.sheepdog.core.mqtt.ProMqttMessageFactory;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.mqtt.*;
+import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.Future;
@@ -94,9 +95,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent){
             IdleStateEvent idleEvent = (IdleStateEvent) evt;
-            if (idleEvent == IdleStateEvent.FIRST_READER_IDLE_STATE_EVENT
-                    || idleEvent == IdleStateEvent.READER_IDLE_STATE_EVENT){
+            if (idleEvent.state() == IdleState.READER_IDLE){
                 if(state == CONNECTED && session != null){
+                    System.out.println(idleEvent.isFirst());
                     session.disconnect();
                     if(logger.isInfoEnabled()){
                         logger.warn("client ({}) ping timeout", session.clientId());
