@@ -301,7 +301,6 @@ public class ClientHandler extends SimpleChannelInboundHandler<MqttMessage> impl
         int messageId = msg.variableHeader().packetId();
         if (ack && qos.value() > MqttQoS.AT_MOST_ONCE.value() && messageId > 0) {
             MqttPubAckMessage pubAckMessage = ProMqttMessageFactory.newPubAck(messageId);
-            System.out.println("pub ack" + messageId + ".........");
             ctx.writeAndFlush(pubAckMessage);
         }
     }
