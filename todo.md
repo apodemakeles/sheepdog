@@ -6,4 +6,4 @@
 * 定时重发最终失败
 * 定时重发如果遇到中断连接
 * 定时重发如果遇到gracefully shutdown
-
+* rocketmq接入抽象化
