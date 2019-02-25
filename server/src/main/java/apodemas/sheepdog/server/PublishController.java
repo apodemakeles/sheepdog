@@ -27,7 +27,7 @@ public class PublishController {
     private final RepubScheduler repubScheduler;
     private final ServerSettings settings;
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(PublishController.class);
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(PublishController.class);
 
     private AtomicInteger idCounter = new AtomicInteger(1);
 
@@ -78,9 +78,9 @@ public class PublishController {
                         message.release();
                         int id = message.variableHeader().packetId();
                         if(e.reason() == RetryFailReason.QUEUE_EXCEED_LIMIT){
-                            logger.warn("republish queue is full, message (id:{}) be removed", id);
-                        }else if(logger.isInfoEnabled()) {
-                            logger.info("republish message (id: {}) failed due to {}", id, e.reason());
+                            LOG.warn("republish queue is full, message (id:{}) be removed", id);
+                        }else if(LOG.isInfoEnabled()) {
+                            LOG.info("republish message (id: {}) failed due to {}", id, e.reason());
                         }
                     }
                 }

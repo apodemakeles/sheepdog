@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @time 2019-01-07 15:54
  **/
 public class MemorySessionManager implements SessionManager {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(MemorySessionManager.class);
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(MemorySessionManager.class);
 
     private final Map<String, MemorySession> sessions = new HashMap<>(256);
     private final SubscriptionManager subManager = new SubscriptionManager();
@@ -118,7 +118,7 @@ public class MemorySessionManager implements SessionManager {
             MemorySession session = new MemorySession(ctx, clientId, pubCtrl);
             if (sessions.containsKey(clientId)) {
                 MemorySession oldSession = sessions.get(clientId);
-                logger.warn("overlapping occurred client {}, stopping old one", clientId);
+                LOG.warn("overlapping occurred client {}, stopping old one", clientId);
                 removeSession(oldSession);
                 oldSession.closeContext();
             }

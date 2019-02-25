@@ -29,7 +29,7 @@ import java.util.List;
  * @time 2019-01-02 11:26
  **/
 public class Server {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(Server.class);
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(Server.class);
     private final ServerSettings settings;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
@@ -50,7 +50,7 @@ public class Server {
 
     public Future<Void> bind(String inetHost, int inetPort) throws Exception{
         ServerBootstrap bootstrap = new ServerBootstrap();
-        logger.info("server startup");
+        LOG.info("server startup");
 
         MemorySessionManager manager = new MemorySessionManager(settings);
         ChannelFuture channelFuture = bootstrap.group(bossGroup, workerGroup)
@@ -71,7 +71,7 @@ public class Server {
 
         HttpServer server = buildHttpServer(inetHost, manager);
         server.start();
-        logger.info("http server started.");
+        LOG.info("http server started.");
 
         return channelFuture;
     }
@@ -101,7 +101,7 @@ public class Server {
             }
         });
         mqConsumer.start();
-        logger.info("MQ Consumer started");
+        LOG.info("MQ Consumer started");
     }
 
 

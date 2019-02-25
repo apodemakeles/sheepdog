@@ -21,7 +21,7 @@ import static io.netty.handler.codec.mqtt.MqttMessageType.CONNECT;
  * @time 2019-01-02 13:27
  **/
 public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ServerHandler.class);
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(ServerHandler.class);
     public static final String NAME = "Sheepdog Handler";
     static int UNCONNECTED = 0;
     static int AUTHENTICATING = 1;
@@ -50,8 +50,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
             ctx.close();
         }
 
-        if(logger.isWarnEnabled()){
-            logger.warn("client ({}) connection disconnected due to exceptions", clientId, cause);
+        if(LOG.isWarnEnabled()){
+            LOG.warn("client ({}) connection disconnected due to exceptions", clientId, cause);
         }
     }
 
@@ -74,16 +74,16 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
                     break;
                 case PINGREQ:
                     session.writeAndFlush(ProMqttMessageFactory.newPingresp());
-                    if(logger.isDebugEnabled()){
-                        logger.debug("client ({}) ping", session.clientId());
+                    if(LOG.isDebugEnabled()){
+                        LOG.debug("client ({}) ping", session.clientId());
                     }
                     break;
                 case DISCONNECT:
                     session.disconnect();
                     break;
                 default:
-                    if(logger.isInfoEnabled()){
-                        logger.info("unexpected message type {}", msgType);
+                    if(LOG.isInfoEnabled()){
+                        LOG.info("unexpected message type {}", msgType);
                     }
                     break;
 
@@ -99,8 +99,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
                 if(state == CONNECTED && session != null){
                     System.out.println(idleEvent.isFirst());
                     session.disconnect();
-                    if(logger.isInfoEnabled()){
-                        logger.warn("client ({}) ping timeout", session.clientId());
+                    if(LOG.isInfoEnabled()){
+                        LOG.warn("client ({}) ping timeout", session.clientId());
                     }
                 }
             }
@@ -126,8 +126,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
 
         if(StringUtils.notEmpty(connectInfo.prefix())
                 && !connectInfo.clientId().startsWith(connectInfo.prefix())){
-            if(logger.isDebugEnabled()){
-                logger.debug("prefix is required before client id({})", connectInfo.clientId());
+            if(LOG.isDebugEnabled()){
+                LOG.debug("prefix is required before client id({})", connectInfo.clientId());
             }
 
             ctx.writeAndFlush(connackMessage(MqttConnectReturnCode.CONNECTION_REFUSED_IDENTIFIER_REJECTED));
@@ -150,7 +150,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
                 onAuthSuccess(connectInfo, ctx);
             }else {
                 if (!fut.isSuccess()) {
-                    logger.info("exception {} occurred in authentication (client id : {})", fut.cause(), connectInfo.clientId());
+                    LOG.info("exception {} occurred in authentication (client id : {})", fut.cause(), connectInfo.clientId());
                 }
                 ctx.writeAndFlush(connackMessage(MqttConnectReturnCode.CONNECTION_REFUSED_BAD_USER_NAME_OR_PASSWORD));
                 ctx.close();
@@ -164,8 +164,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
                     if(sessFut.isSuccess()){
                         session = sessFut.get();
 
-                        if(logger.isInfoEnabled()){
-                            logger.info("client ({}) connect successfully, keep alive={}s", session.clientId(), connectInfo.keepAliveTimeSeconds());
+                        if(LOG.isInfoEnabled()){
+                            LOG.info("client ({}) connect successfully, keep alive={}s", session.clientId(), connectInfo.keepAliveTimeSeconds());
                         }
 
                         int timeoutInSec = (int)(connectInfo.keepAliveTimeSeconds() * settings.timeoutFactor());
@@ -191,8 +191,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
         session.subscribe(msg, ctx.executor().newPromise())
                 .addListener((Future<List<Integer>> topicFut)->{
                     if(topicFut.isSuccess()){
-                        if(logger.isInfoEnabled()){
-                            logger.info("client ({}) subscribe (message id: {}) topics {}", session.clientId(), id, subscriptions);
+                        if(LOG.isInfoEnabled()){
+                            LOG.info("client ({}) subscribe (message id: {}) topics {}", session.clientId(), id, subscriptions);
                         }
                         List<Integer> topics = topicFut.get();
                         MqttSubAckMessage ackMsg = ProMqttMessageFactory.newSubAck(id, topics);
@@ -208,8 +208,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
         session.unsubscribe(msg, ctx.executor().newPromise())
                 .addListener((Future<Void> fut)->{
                    if(fut.isSuccess()){
-                       if(logger.isInfoEnabled()){
-                           logger.info("client ({}) unsubscribe (message id: {}) topics {}", session.clientId(), id, topics);
+                       if(LOG.isInfoEnabled()){
+                           LOG.info("client ({}) unsubscribe (message id: {}) topics {}", session.clientId(), id, topics);
                        }
                        MqttUnsubAckMessage ackMsg = ProMqttMessageFactory.newUnsubAck(id);
                        session.writeAndFlush(ackMsg);
