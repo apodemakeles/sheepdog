@@ -1,6 +1,9 @@
 package apodemas.sheepdog.server;
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author caozheng
  * @time 2019-01-02 11:22
@@ -11,6 +14,8 @@ public class ServerSettings {
     private int publishAckTimeoutSec = DEFAULT_PUBLISH_ACK_TIMEOUT_SEC;
     private int maxRepubTimes = DEFAULT_MAX_REPUB_TIMES;
     private int maxRepubQueueSize = DEFAULT_MAX_REPUB_QUEUE_SIZE;
+
+    private Map<Class<?>, CustomSetting> cusSettings = new HashMap<>();
 
     public static int DEFAULT_PUBLISH_ACK_TIMEOUT_SEC = 15;
     public static double DEFAULT_TIMEOUT_FACTOR = 1.5;
@@ -61,6 +66,10 @@ public class ServerSettings {
         this.maxRepubQueueSize = maxRepubQueueSize;
     }
 
+    public void setCustomSetting(CustomSetting setting){
+        cusSettings.put(setting.getClass(), setting);
+    }
+
     public String idPrefix() {
         return idPrefix;
     }
@@ -81,4 +90,7 @@ public class ServerSettings {
         return maxRepubQueueSize;
     }
 
+    public <T extends CustomSetting> T getCustomizeSetting(Class<T > clazz){
+        return (T)cusSettings.get(clazz);
+    }
 }

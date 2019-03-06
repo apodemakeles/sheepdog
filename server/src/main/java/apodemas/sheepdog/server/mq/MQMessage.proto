@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+/** cd src/main/java  **/
+/** protoc --java_out=. apodemas/sheepdog/server/mq/MQMessage.proto **/
+
+option java_package = "apodemas.sheepdog.server.mq";
+option java_outer_classname = "MQMessageProtos";
+
+message MQMessage{
+    MessageType type = 1;
+    string topic = 2;
+    QosType qos = 3;
+    bytes payload = 4;
+
+    enum MessageType{
+        FAILURE = 0;
+        PUBLISH = 1;
+    }
+
+    enum QosType{
+        AT_MOST_ONCE = 0;
+        AT_LEAST_ONCE = 1;
+        EXACTLY_ONCE = 2;
+    }
+}

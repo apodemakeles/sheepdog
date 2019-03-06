@@ -19,6 +19,8 @@
 
     <properties>
         <netty.version>4.1.25.Final</netty.version>
+        <rocketmq.version>4.4.0</rocketmq.version>
+        <protobuf.version>3.6.1</protobuf.version>
     </properties>
 
     <dependencyManagement>
@@ -27,6 +29,16 @@
                 <groupId>com.alibaba</groupId>
                 <artifactId>fastjson</artifactId>
                 <version>1.2.49</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-client</artifactId>
+                <version>${rocketmq.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>

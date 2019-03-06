@@ -1,8 +1,15 @@
 package apodemas.sheepdog.server;
 
 import apodemas.sheepdog.core.concurrent.EventLoopPromise;
-import apodemas.sheepdog.http.server.*;
+import apodemas.sheepdog.http.server.DefaultHttpDispatcher;
+import apodemas.sheepdog.http.server.HttpServer;
+import apodemas.sheepdog.http.server.HttpServerSetting;
+import apodemas.sheepdog.http.server.ParameterizedPatriciaTrieRouter;
 import apodemas.sheepdog.server.api.*;
+import apodemas.sheepdog.server.mq.DefaultMessageConsumer;
+import apodemas.sheepdog.server.mq.MQConsumerStartupException;
+import apodemas.sheepdog.server.mq.MessageQueueConsumer;
+import apodemas.sheepdog.server.mq.rocket.RocketMQConsumer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -15,14 +22,7 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
-import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
-import org.apache.rocketmq.client.consumer.listener.*;
-import org.apache.rocketmq.client.exception.MQClientException;
-import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.common.protocol.heartbeat.MessageModel;
-
-import java.util.List;
 
 /**
  * @author caozheng
@@ -34,7 +34,7 @@ public class Server {
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
     private final EventLoopPromise shutdownHandler;
-    private DefaultMQPushConsumer mqConsumer;
+    private final MessageQueueConsumer mqConsumer;
 
     public Server(){
         this(ServerSettings.DEFAULT);
@@ -45,8 +45,8 @@ public class Server {
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup();
         this.shutdownHandler = new EventLoopPromise(GlobalEventExecutor.INSTANCE);
+        this.mqConsumer = new RocketMQConsumer();
     }
-
 
     public Future<Void> bind(String inetHost, int inetPort) throws Exception{
         ServerBootstrap bootstrap = new ServerBootstrap();
@@ -67,54 +67,21 @@ public class Server {
                     }
                 }).bind(inetHost, inetPort);
 
-        startupMQPoller(manager);
+        startupMQConsumer(manager);
 
         HttpServer server = buildHttpServer(inetHost, manager);
         server.start();
-        LOG.info("http server started.");
+        LOG.info("http server started");
+        LOG.info("server start successfully");
 
         return channelFuture;
     }
 
-    private void startupMQPoller(SessionManager manager) throws MQClientException {
-        mqConsumer = new DefaultMQPushConsumer("group");
-        mqConsumer.setNamesrvAddr("127.0.0.1:9876");
-        mqConsumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);
-        mqConsumer.setMessageModel(MessageModel.BROADCASTING);
-        mqConsumer.subscribe("mqtt", "*");
-        mqConsumer.registerMessageListener(new MessageListenerConcurrently(){
-            @Override
-            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> messages, ConsumeConcurrentlyContext consumeOrderlyContext) {
-                for(MessageExt msg : messages){
-                    PublishMessageTemplate template = getTemplate(msg);
-                    manager.findSession(template.topic()).addListener((Future<Session> fut)->{
-                        if(fut.isSuccess()){
-                            Session session = fut.get();
-                            if(session != null) {
-                                session.publish(template);
-                            }
-                        }
-                    }) ;
-                }
-
-                return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
-            }
-        });
-        mqConsumer.start();
-        LOG.info("MQ Consumer started");
+    private void startupMQConsumer(SessionManager manager) throws MQConsumerStartupException {
+        mqConsumer.initWithSettings(this.settings);
+        mqConsumer.start(new DefaultMessageConsumer(manager));
+        LOG.info("mq consumer started");
     }
-
-
-    private PublishMessageTemplate getTemplate(MessageExt msg){
-        PublishMessageTemplate template = new PublishMessageTemplate();
-        template.setTopic("6340299262395416576");
-        byte[] content = msg.getBody();
-        template.setQos(MqttQoS.AT_LEAST_ONCE);
-        template.setPayload(content);
-
-        return template;
-    }
-
 
     private HttpServer buildHttpServer(String inetHost, SessionManager manager){
         ParameterizedPatriciaTrieRouter router = new ParameterizedPatriciaTrieRouter();
