@@ -3,7 +3,9 @@ package apodemas.sheepdog.example.server;
 
 import apodemas.sheepdog.server.Server;
 import apodemas.sheepdog.server.ServerSettings;
+import apodemas.sheepdog.server.mq.rocket.RocketMQSettings;
 import io.netty.util.concurrent.Future;
+import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 
 /**
  * @author caozheng
@@ -13,6 +15,8 @@ public class ServerApplication {
     public static void main(String[] args) throws Exception{
         ServerSettings serverSettings = new ServerSettings();
         serverSettings.setIdPrefix("ABCDEF1234567890");
+        RocketMQSettings rocketMQSettings = new RocketMQSettings();
+        serverSettings.setCustomSetting(rocketMQSettings);
 
         Server server = new Server(serverSettings);
         Future<Void> terFuture = server.bind("127.0.0.1", 3883);

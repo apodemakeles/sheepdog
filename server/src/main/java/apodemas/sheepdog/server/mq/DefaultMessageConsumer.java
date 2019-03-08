@@ -20,16 +20,21 @@ public class DefaultMessageConsumer implements MessageConsumer {
 
     @Override
     public void accept(MQMessage mqMessage) {
-        if(mqMessage.getType().equals(MQMessage.MessageType.PUBLISH)){
+        if (mqMessage.getType().equals(MQMessage.MessageType.PUBLISH)) {
             PublishMessageTemplate template = getPublishTemplate(mqMessage);
-            sessionManager.findSession(template.topic()).addListener((Future<Session> fut)->{
-                if(fut.isSuccess()){
+            System.out.println("topic: " + template.topic()
+                    + " qos: " + template.qos()
+                    + " payload: " + new String(template.payload()));
+            sessionManager.findSession(template.topic()).addListener((Future<Session> fut) -> {
+                if (fut.isSuccess()) {
                     Session session = fut.get();
-                    if(session != null) {
+                    if (session != null) {
                         session.publish(template);
+                    }else{
+                        System.out.println("no such device");
                     }
                 }
-            }) ;
+            });
         }
     }
 

@@ -2,6 +2,7 @@ package apodemas.sheepdog.server.mq.rocket;
 
 import apodemas.sheepdog.common.Checks;
 import apodemas.sheepdog.server.ServerSettings;
+import apodemas.sheepdog.server.mq.AbstractMQConsumer;
 import apodemas.sheepdog.server.mq.MQConsumerStartupException;
 import apodemas.sheepdog.server.mq.MQMessageProtos.MQMessage;
 import apodemas.sheepdog.server.mq.MessageConsumer;
@@ -47,6 +48,7 @@ public class RocketMQConsumer extends AbstractMQConsumer implements MessageQueue
                 @Override
                 public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> messages, ConsumeConcurrentlyContext consumeOrderlyContext) {
                     List<MQMessage> msgList = deserializeMessage(messages);
+                    System.out.println("consume " + msgList.size() + " messages");
                     for(MQMessage msg : msgList) {
                         try {
                             consumer.accept(msg);
@@ -58,6 +60,8 @@ public class RocketMQConsumer extends AbstractMQConsumer implements MessageQueue
                     return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
                 }
             });
+
+            mqConsumer.start();
         }catch (MQClientException e){
             throw new MQConsumerStartupException("rocket mq client startup failed", e);
         }

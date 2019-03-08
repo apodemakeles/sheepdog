@@ -1,6 +1,5 @@
-package apodemas.sheepdog.server.mq.rocket;
+package apodemas.sheepdog.server.mq;
 
-import apodemas.sheepdog.server.mq.MQMessageProtos;
 import apodemas.sheepdog.server.mq.MQMessageProtos.MQMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.netty.util.internal.logging.InternalLogger;
