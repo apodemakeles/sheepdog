@@ -2,39 +2,33 @@ package apodemas.sheepdog.server.mq;
 
 import apodemas.sheepdog.server.PublishMessageTemplate;
 import apodemas.sheepdog.server.Session;
-import apodemas.sheepdog.server.SessionManager;
 import apodemas.sheepdog.server.mq.MQMessageProtos.MQMessage;
+import apodemas.sheepdog.server.sub.SubscriptionController;
 import io.netty.handler.codec.mqtt.MqttQoS;
-import io.netty.util.concurrent.Future;
+
+import java.util.List;
 
 /**
  * @author caozheng
  * @time 2019-03-06 12:54
  **/
 public class DefaultMessageConsumer implements MessageConsumer {
-    private final SessionManager sessionManager;
+    private final SubscriptionController subscriptionController;
 
-    public DefaultMessageConsumer(SessionManager sessionManager) {
-        this.sessionManager = sessionManager;
+    public DefaultMessageConsumer(SubscriptionController subscriptionController) {
+        this.subscriptionController = subscriptionController;
     }
 
     @Override
     public void accept(MQMessage mqMessage) {
         if (mqMessage.getType().equals(MQMessage.MessageType.PUBLISH)) {
             PublishMessageTemplate template = getPublishTemplate(mqMessage);
-            System.out.println("topic: " + template.topic()
-                    + " qos: " + template.qos()
-                    + " payload: " + new String(template.payload()));
-            sessionManager.findSession(template.topic()).addListener((Future<Session> fut) -> {
-                if (fut.isSuccess()) {
-                    Session session = fut.get();
-                    if (session != null) {
-                        session.publish(template);
-                    }else{
-                        System.out.println("no such device");
-                    }
+            List<Session> sessions = this.subscriptionController.getTopicSubSessions(template.topic());
+            if(sessions!= null) {
+                for (Session session : sessions) {
+                    session.publish(template);
                 }
-            });
+            }
         }
     }
 

@@ -1,8 +1,9 @@
-package apodemas.sheepdog.server;
+package apodemas.sheepdog.server.pub;
 
 import apodemas.sheepdog.core.retry.RetryException;
 import apodemas.sheepdog.core.retry.RetryFailReason;
 import apodemas.sheepdog.core.retry.RetryScheduler;
+import apodemas.sheepdog.server.PublishMessageTemplate;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundInvoker;
@@ -20,32 +21,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author caozheng
- * @time 2019-01-21 19:22
+ * @time 2019-03-18 20:52
  **/
 public class PublishController {
     private final ChannelHandlerContext ctx;
     private final RepubScheduler repubScheduler;
-    private final ServerSettings settings;
+    private final PubSettings settings;
 
     private static final InternalLogger LOG = InternalLoggerFactory.getInstance(PublishController.class);
 
     private AtomicInteger idCounter = new AtomicInteger(1);
 
-    public PublishController(ChannelHandlerContext ctx, ServerSettings settings) {
+    public PublishController(ChannelHandlerContext ctx, PubSettings settings) {
         this.ctx = ctx;
         this.settings = settings;
         this.repubScheduler = new RepubScheduler(ctx.executor(), settings, ctx);
     }
 
     public void publish(PublishMessageTemplate template){
-//        if(ctx.executor().inEventLoop()){
-//            doPublish(message);
-//        }else{
-//            ctx.executor().submit(()->{
-//                doPublish(message);
-//            });
-//        }
-
         doPublish(template);
     }
 
@@ -105,10 +98,10 @@ public class PublishController {
                 .build();
     }
 
-    private static class RepubScheduler extends RetryScheduler<MqttPublishMessage, Integer>{
+    private static class RepubScheduler extends RetryScheduler<MqttPublishMessage, Integer> {
         private final ChannelOutboundInvoker outInvoker;
 
-        public RepubScheduler(EventExecutor executor, ServerSettings settings, ChannelOutboundInvoker outInvoker) {
+        public RepubScheduler(EventExecutor executor, PubSettings settings, ChannelOutboundInvoker outInvoker) {
             super(executor, settings.maxRepubTimes(), settings.maxRepubQueueSize());
             this.outInvoker = outInvoker;
         }

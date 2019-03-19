@@ -1,34 +1,45 @@
-package apodemas.sheepdog.server;
+package apodemas.sheepdog.server.sub;
 
 import apodemas.sheepdog.common.CollectionUtils;
-import org.apache.rocketmq.common.ThreadFactoryImpl;
+import apodemas.sheepdog.server.Session;
+import apodemas.sheepdog.server.Subscription;
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author caozheng
- * @time 2019-01-15 15:50
+ * @time 2019-03-19 13:45
  **/
-public class SubscriptionManager {
+public class SubscriptionController {
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(SubscriptionController.class);
+
     private final Map<String, List<Subscription>> sessionTopicMap = new HashMap<>(256);
     private final Map<String, List<Session>> topicSessionMap = new HashMap<>(256);
-    private final ExecutorService executorService = Executors.newFixedThreadPool(3, new ThreadFactoryImpl("SubscriptionExecutorThread_"));
+//    private final ExecutorService executorService = Executors.newFixedThreadPool(3, new ThreadFactoryImpl("SubscriptionExecutorThread_"));
+    private final ReadWriteLock mapLock = new ReentrantReadWriteLock();
 
     public void clean(Session session){
         String clientId = session.clientId();
+        mapLock.writeLock().lock();
+
         if (sessionTopicMap.containsKey(clientId)) {
             for(Subscription sub : sessionTopicMap.get(clientId)){
                 topicSessionMap.remove(sub.getTopic(), session);
             }
         }
+        mapLock.writeLock().unlock();
     }
 
-    public List<Integer> subscribe(Session session, List<Subscription> subscriptions) {
+    public List<Integer> subscribe(Session session, List<Subscription> subscriptions){
         if (subscriptions == null || subscriptions.size() == 0) {
             return new ArrayList<>();
         }
+
+        mapLock.writeLock().lock();
 
         List<Subscription> subs = sessionTopicMap.get(session.clientId());
         if (subs == null) {
@@ -48,10 +59,14 @@ public class SubscriptionManager {
             results.add(toSub.qosValue());
         }
 
+        mapLock.writeLock().unlock();
+
         return results;
     }
 
     public void unsubscribe(Session session, List<String> topics){
+        mapLock.writeLock().lock();
+
         for(String topic : topics){
             List<Session> sessions = topicSessionMap.get(topic);
             if(sessions != null) {
@@ -63,14 +78,24 @@ public class SubscriptionManager {
                 }
             }
         }
+
+        mapLock.writeLock().unlock();
     }
 
     public List<Subscription> getSessionSubscriptions(Session session){
-        return sessionTopicMap.get(session.clientId());
+        mapLock.readLock().lock();
+        List<Subscription> results = sessionTopicMap.get(session.clientId());
+        mapLock.readLock().unlock();
+
+        return results;
     }
 
     public List<Session> getTopicSubSessions(String topic){
-        return topicSessionMap.get(topic);
+        mapLock.readLock().lock();
+        List<Session> results = topicSessionMap.get(topic);
+        mapLock.readLock().unlock();
+
+        return results;
     }
 
     private void saveTopicSessionMapping(String topic, Session session){

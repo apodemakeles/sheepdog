@@ -4,9 +4,12 @@ import apodemas.sheepdog.common.StringUtils;
 import apodemas.sheepdog.http.server.HttpContext;
 import apodemas.sheepdog.http.server.requst.JSONGetRequestHandler;
 import apodemas.sheepdog.server.ClientSessionInfo;
+import apodemas.sheepdog.server.Session;
 import apodemas.sheepdog.server.SessionManager;
+import apodemas.sheepdog.server.sub.SubscriptionController;
 import io.netty.util.concurrent.Future;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,10 +17,10 @@ import java.util.List;
  * @time 2019-01-20 20:26
  **/
 public class SubscriptionsHandler extends JSONGetRequestHandler {
-    private final SessionManager manager;
+    private final SubscriptionController subscriptionController;
 
-    public SubscriptionsHandler(SessionManager manager) {
-        this.manager = manager;
+    public SubscriptionsHandler(SubscriptionController subscriptionController) {
+        this.subscriptionController = subscriptionController;
     }
 
     @Override
@@ -28,14 +31,14 @@ public class SubscriptionsHandler extends JSONGetRequestHandler {
             return;
         }
 
-        manager.findSubscription(topic, context.newPromise())
-                .addListener((Future<List<ClientSessionInfo>> fut)->{
-                    if(fut.isSuccess()){
-                        context.json(fut.get());
-                    }else{
-                        INTERNAL_SERVER_ERROR(context, fut.cause());
-                    }
-                });
+        List<ClientSessionInfo> infos = new ArrayList<>();
+        List<Session> sessions = subscriptionController.getTopicSubSessions(topic);
+        for (Session session : sessions) {
+            ClientSessionInfo info = new ClientSessionInfo(session.clientId(), null);
+            infos.add(info);
+        }
+
+        context.json(infos);
     }
 
 }

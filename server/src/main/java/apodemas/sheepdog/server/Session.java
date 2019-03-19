@@ -1,5 +1,6 @@
 package apodemas.sheepdog.server;
 
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.Promise;
@@ -12,12 +13,12 @@ import java.util.List;
  **/
 public interface Session {
     String clientId();
-    boolean isConnected();
+    boolean isOpen();
     void writeAndFlush(MqttMessage message);
     void publish(PublishMessageTemplate template);
     void ack(MqttPubAckMessage message);
     void disconnect();
-    Future<List<Integer>> subscribe(MqttSubscribeMessage message, Promise<List<Integer>> promise);
-    Future<Void> unsubscribe(MqttUnsubscribeMessage message, Promise<Void> promise);
+    void subscribe(MqttSubscribeMessage message);
+    void unsubscribe(MqttUnsubscribeMessage message);
 }
 

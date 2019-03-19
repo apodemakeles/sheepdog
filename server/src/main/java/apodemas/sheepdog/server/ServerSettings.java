@@ -9,6 +9,7 @@ import java.util.Map;
  * @time 2019-01-02 11:22
  **/
 public class ServerSettings {
+    private String id;
     private String idPrefix;
     private double timeoutFactor = DEFAULT_TIMEOUT_FACTOR;
     private int publishAckTimeoutSec = DEFAULT_PUBLISH_ACK_TIMEOUT_SEC;
@@ -28,6 +29,14 @@ public class ServerSettings {
         ServerSettings serverSettings = new ServerSettings();
 
         DEFAULT = serverSettings;
+    }
+
+    public String id() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public void setIdPrefix(String idPrefix) {

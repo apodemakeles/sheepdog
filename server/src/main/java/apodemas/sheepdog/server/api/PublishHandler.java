@@ -7,6 +7,7 @@ import apodemas.sheepdog.server.ClientSessionInfo;
 import apodemas.sheepdog.server.PublishMessageTemplate;
 import apodemas.sheepdog.server.Session;
 import apodemas.sheepdog.server.SessionManager;
+import apodemas.sheepdog.server.sub.SubscriptionController;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.netty.util.concurrent.Future;
 
@@ -19,10 +20,10 @@ import java.util.List;
  * @time 2019-01-21 22:10
  **/
 public class PublishHandler  extends JSONGetRequestHandler {
-    private final SessionManager manager;
+    private final SubscriptionController subscriptionController;
 
-    public PublishHandler(SessionManager manager) {
-        this.manager = manager;
+    public PublishHandler(SubscriptionController subscriptionController) {
+        this.subscriptionController = subscriptionController;
     }
 
     @Override
@@ -41,25 +42,15 @@ public class PublishHandler  extends JSONGetRequestHandler {
 
         try {
             PublishMessageTemplate template = createTemplate(topic, msg);
+            List<Session> sessions = subscriptionController.getTopicSubSessions(topic);
+            List<ClientSessionInfo> infos = new ArrayList<>();
+            for (Session session : sessions) {
+                session.publish(template);
+                ClientSessionInfo info = new ClientSessionInfo(session.clientId(), null);
+                infos.add(info);
+            }
 
-            manager.findSessionByTopic(topic, context.newPromise())
-                    .addListener((Future<List<Session>> fut) -> {
-                        if (fut.isSuccess()) {
-                            List<Session> sessions = fut.get();
-                            if (sessions == null) {
-                                sessions = new ArrayList<>();
-                            }
-                            List<ClientSessionInfo> results = new ArrayList<>();
-                            for (Session session : sessions) {
-                                session.publish(template);
-                                results.add(new ClientSessionInfo(session.clientId(), null));
-                            }
-
-                            context.json(results);
-                        } else {
-                            INTERNAL_SERVER_ERROR(context, fut.cause());
-                        }
-                    });
+            context.json(infos);
         }catch (Exception e){
             INTERNAL_SERVER_ERROR(context, e);
         }
