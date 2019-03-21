@@ -1,7 +1,6 @@
 package apodemas.sheepdog.server;
 
 import apodemas.sheepdog.common.StringUtils;
-import apodemas.sheepdog.core.concurrent.EventLoopPromise;
 import apodemas.sheepdog.http.server.DefaultHttpDispatcher;
 import apodemas.sheepdog.http.server.HttpServer;
 import apodemas.sheepdog.http.server.HttpServerSetting;
@@ -22,7 +21,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.mqtt.MqttDecoder;
 import io.netty.handler.codec.mqtt.MqttEncoder;
 import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GlobalEventExecutor;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
@@ -37,7 +35,7 @@ public class Server {
     private final ServerSettings settings;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
-    private final EventLoopPromise shutdownHandler;
+//    private final EventLoopPromise shutdownHandler;
     private final MessageQueueConsumer mqConsumer;
 
     public Server(){
@@ -48,16 +46,17 @@ public class Server {
         this.settings = settings;
         this.bossGroup = new NioEventLoopGroup(1);
         this.workerGroup = new NioEventLoopGroup();
-        this.shutdownHandler = new EventLoopPromise(GlobalEventExecutor.INSTANCE);
+//        this.shutdownHandler = new EventLoopPromise(GlobalEventExecutor.INSTANCE);
         this.mqConsumer = new RocketMQConsumer();
     }
 
     public Future<Void> bind(String inetHost, int inetPort) throws Exception{
+        checkId();
         ServerBootstrap bootstrap = new ServerBootstrap();
         LOG.info("server {} startup", settings.id());
 
         SubscriptionController subscriptionController = new SubscriptionController();
-        SessionController sessionController = new SessionController("server_id",
+        SessionController sessionController = new SessionController(
                 new DefaultEventLoop(), new DefaultRemotingService(), settings, subscriptionController);
 
         ChannelFuture channelFuture = bootstrap.group(bossGroup, workerGroup)
@@ -87,7 +86,7 @@ public class Server {
     private void checkId(){
         if(StringUtils.empty(settings.id())){
             String id = UUID.randomUUID().toString();
-            LOG.info("select a id {}", id);
+            LOG.info("select a id {} for server", id);
             settings.setId(id);
         }
     }
@@ -110,11 +109,12 @@ public class Server {
         return new HttpServer(inetHost, 1885, new HttpServerSetting(), new DefaultHttpDispatcher(router));
     }
 
-    public Future<?> terminationFuture(){
-        return shutdownHandler.terminationFuture();
-    }
 
-    public void shutdownGracefully(){
-        shutdownHandler.shutdownGracefully();
-    }
+//    public Future<?> terminationFuture(){
+//        return shutdownHandler.terminationFuture();
+//    }
+//
+//    public void shutdownGracefully(){
+//        shutdownHandler.shutdownGracefully();
+//    }
 }

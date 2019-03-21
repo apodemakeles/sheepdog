@@ -29,7 +29,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class SessionController implements SessionService{
     private static final InternalLogger LOG = InternalLoggerFactory.getInstance(SessionController.class);
 
-    private final String serverId;
     private final Map<String, LocalMemorySession> sessions = new HashMap<>(256);
     private final ReadWriteLock mapLock = new ReentrantReadWriteLock();
     private final EventLoop eventLoop;
@@ -37,9 +36,8 @@ public class SessionController implements SessionService{
     private final ServerSettings serverSettings;
     private final SubscriptionController subscriptionController;
 
-    public SessionController(String serverId, EventLoop eventLoop, RemotingService remotingService,
+    public SessionController(EventLoop eventLoop, RemotingService remotingService,
                              ServerSettings settings, SubscriptionController subscriptionController) {
-        this.serverId = serverId;
         this.eventLoop = eventLoop;
         this.remotingService = remotingService;
         this.serverSettings = settings;
@@ -51,7 +49,7 @@ public class SessionController implements SessionService{
         regInfo.setClientId(connectInfo.clientId());
         regInfo.setUpTimestamp(System.currentTimeMillis());
         regInfo.setUsername(connectInfo.username());
-        regInfo.setServerId(serverId);
+        regInfo.setServerId(serverSettings.id());
         Future<ClientRegistryResult> regResult = remotingService.RegisterClient(regInfo, eventLoop.newPromise());
         regResult.addListener(FutureListenerBuilder.successThen(result -> createSession(connectInfo), promise));
 
@@ -72,7 +70,7 @@ public class SessionController implements SessionService{
     private void unregisterClient(String clientId){
         ClientUnregistryInfo unregInfo = new ClientUnregistryInfo();
         unregInfo.setClientId(clientId);
-        unregInfo.setServerId(serverId);
+        unregInfo.setServerId(serverSettings.id());
         remotingService.UnregisterClient(unregInfo, eventLoop.newPromise());
     }
 
@@ -84,7 +82,7 @@ public class SessionController implements SessionService{
             LOG.warn("duplicated client id({})", clientId);
             mapLock.writeLock().unlock();
 
-            throw new ClientConnectedException(clientId, serverId);
+            throw new ClientConnectedException(clientId, serverSettings.id());
         }
         PubSettings pubSettings = new PubSettings();
         pubSettings.setMaxRepubQueueSize(serverSettings.maxRepubQueueSize());
