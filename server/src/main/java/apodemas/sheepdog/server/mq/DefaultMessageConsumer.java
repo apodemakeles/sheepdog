@@ -3,7 +3,7 @@ package apodemas.sheepdog.server.mq;
 import apodemas.sheepdog.server.PublishMessageTemplate;
 import apodemas.sheepdog.server.Session;
 import apodemas.sheepdog.server.mq.MQMessageProtos.MQMessage;
-import apodemas.sheepdog.server.sub.SubscriptionController;
+import apodemas.sheepdog.server.sub.SubscriptionManager;
 import io.netty.handler.codec.mqtt.MqttQoS;
 
 import java.util.List;
@@ -13,17 +13,17 @@ import java.util.List;
  * @time 2019-03-06 12:54
  **/
 public class DefaultMessageConsumer implements MessageConsumer {
-    private final SubscriptionController subscriptionController;
+    private final SubscriptionManager subscriptionManager;
 
-    public DefaultMessageConsumer(SubscriptionController subscriptionController) {
-        this.subscriptionController = subscriptionController;
+    public DefaultMessageConsumer(SubscriptionManager subscriptionManager) {
+        this.subscriptionManager = subscriptionManager;
     }
 
     @Override
     public void accept(MQMessage mqMessage) {
         if (mqMessage.getType().equals(MQMessage.MessageType.PUBLISH)) {
             PublishMessageTemplate template = getPublishTemplate(mqMessage);
-            List<Session> sessions = this.subscriptionController.getTopicSubSessions(template.topic());
+            List<Session> sessions = this.subscriptionManager.getTopicSubSessions(template.topic());
             if(sessions!= null) {
                 for (Session session : sessions) {
                     session.publish(template);

@@ -6,10 +6,8 @@ import apodemas.sheepdog.http.server.requst.JSONGetRequestHandler;
 import apodemas.sheepdog.server.ClientSessionInfo;
 import apodemas.sheepdog.server.PublishMessageTemplate;
 import apodemas.sheepdog.server.Session;
-import apodemas.sheepdog.server.SessionManager;
-import apodemas.sheepdog.server.sub.SubscriptionController;
+import apodemas.sheepdog.server.sub.SubscriptionManager;
 import io.netty.handler.codec.mqtt.MqttQoS;
-import io.netty.util.concurrent.Future;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -20,10 +18,10 @@ import java.util.List;
  * @time 2019-01-21 22:10
  **/
 public class PublishHandler  extends JSONGetRequestHandler {
-    private final SubscriptionController subscriptionController;
+    private final SubscriptionManager subscriptionManager;
 
-    public PublishHandler(SubscriptionController subscriptionController) {
-        this.subscriptionController = subscriptionController;
+    public PublishHandler(SubscriptionManager subscriptionManager) {
+        this.subscriptionManager = subscriptionManager;
     }
 
     @Override
@@ -42,7 +40,7 @@ public class PublishHandler  extends JSONGetRequestHandler {
 
         try {
             PublishMessageTemplate template = createTemplate(topic, msg);
-            List<Session> sessions = subscriptionController.getTopicSubSessions(topic);
+            List<Session> sessions = subscriptionManager.getTopicSubSessions(topic);
             List<ClientSessionInfo> infos = new ArrayList<>();
             for (Session session : sessions) {
                 session.publish(template);

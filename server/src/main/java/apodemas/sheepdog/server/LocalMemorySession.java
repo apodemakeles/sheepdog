@@ -2,11 +2,10 @@ package apodemas.sheepdog.server;
 
 import apodemas.sheepdog.core.mqtt.ProMqttMessageFactory;
 import apodemas.sheepdog.server.pub.PublishController;
-import apodemas.sheepdog.server.sub.SubscriptionController;
+import apodemas.sheepdog.server.sub.SubscriptionManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.util.concurrent.EventExecutor;
-import io.netty.util.concurrent.Promise;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 
@@ -23,12 +22,12 @@ public class LocalMemorySession implements Session{
     private volatile boolean open = true;
     private final PublishController pubCtrl;
     private final SessionService sessionService;
-    private final SubscriptionController subController;
+    private final SubscriptionManager subController;
 
     private static final InternalLogger LOG = InternalLoggerFactory.getInstance(LocalMemorySession.class);
 
     public LocalMemorySession(ChannelHandlerContext ctx, String clientId, PublishController pubCtrl,
-                              SessionService sessionService, SubscriptionController subController) {
+                              SessionService sessionService, SubscriptionManager subController) {
         this.ctx = ctx;
         this.eventExecutor = ctx.executor();
         this.clientId = clientId;

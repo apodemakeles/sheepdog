@@ -1,6 +1,6 @@
 * 从bytebuf角度查看是否有内存泄漏
 * ssl
-* server 发消息
+* service locator
 * gracefully shutdown
 * write和writeAndFlush的区别
 * 定时重发最终失败

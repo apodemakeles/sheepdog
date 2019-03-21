@@ -5,19 +5,17 @@ import apodemas.sheepdog.http.server.HttpContext;
 import apodemas.sheepdog.http.server.requst.JSONGetRequestHandler;
 import apodemas.sheepdog.server.ClientSessionInfo;
 import apodemas.sheepdog.server.Session;
-import apodemas.sheepdog.server.SessionController;
 import apodemas.sheepdog.server.SessionManager;
-import io.netty.util.concurrent.Future;
 
 /**
  * @author caozheng
  * @time 2019-01-20 20:44
  **/
 public class DisconnectHandler extends JSONGetRequestHandler {
-    private final SessionController sessionController;
+    private final SessionManager sessionManager;
 
-    public DisconnectHandler(SessionController sessionController) {
-        this.sessionController = sessionController;
+    public DisconnectHandler(SessionManager sessionManager) {
+        this.sessionManager = sessionManager;
     }
 
     @Override
@@ -26,7 +24,7 @@ public class DisconnectHandler extends JSONGetRequestHandler {
         if(StringUtils.empty(clientId)) {
             BAD_REQUEST(context, "id is required");
         }else {
-            Session session = sessionController.findSession(clientId);
+            Session session = sessionManager.findSession(clientId);
             if(session == null){
                 NOT_FOUND(context, clientId);
             }else {

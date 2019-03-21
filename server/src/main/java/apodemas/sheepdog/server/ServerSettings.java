@@ -10,7 +10,12 @@ import java.util.Map;
  **/
 public class ServerSettings {
     private String id;
-    private String idPrefix;
+    private String clientIdPrefix;
+    private String mqttHost = "127.0.0.1";
+    private int mqttPort = 3883;
+    private String httpHost = "127.0.0.1";
+    private int htttPort = 3885;
+
     private double timeoutFactor = DEFAULT_TIMEOUT_FACTOR;
     private int publishAckTimeoutSec = DEFAULT_PUBLISH_ACK_TIMEOUT_SEC;
     private int maxRepubTimes = DEFAULT_MAX_REPUB_TIMES;
@@ -39,8 +44,40 @@ public class ServerSettings {
         this.id = id;
     }
 
-    public void setIdPrefix(String idPrefix) {
-        this.idPrefix = idPrefix;
+    public String mqttHost() {
+        return mqttHost;
+    }
+
+    public void setMqttHost(String mqttHost) {
+        this.mqttHost = mqttHost;
+    }
+
+    public int mqttPort() {
+        return mqttPort;
+    }
+
+    public void setMqttPort(int mqttPort) {
+        this.mqttPort = mqttPort;
+    }
+
+    public String httpHost() {
+        return httpHost;
+    }
+
+    public void setHttpHost(String httpHost) {
+        this.httpHost = httpHost;
+    }
+
+    public int htttPort() {
+        return htttPort;
+    }
+
+    public void htttPort(int htttPort) {
+        this.htttPort = htttPort;
+    }
+
+    public void setClientIdPrefix(String clientIdPrefix) {
+        this.clientIdPrefix = clientIdPrefix;
     }
 
     public void setTimeoutFactor(double timeoutFactor) {
@@ -79,8 +116,8 @@ public class ServerSettings {
         cusSettings.put(setting.getClass(), setting);
     }
 
-    public String idPrefix() {
-        return idPrefix;
+    public String clientIdPrefix() {
+        return clientIdPrefix;
     }
 
     public double timeoutFactor() {

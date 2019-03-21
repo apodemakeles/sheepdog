@@ -5,9 +5,7 @@ import apodemas.sheepdog.http.server.HttpContext;
 import apodemas.sheepdog.http.server.requst.JSONGetRequestHandler;
 import apodemas.sheepdog.server.ClientSessionInfo;
 import apodemas.sheepdog.server.Session;
-import apodemas.sheepdog.server.SessionManager;
-import apodemas.sheepdog.server.sub.SubscriptionController;
-import io.netty.util.concurrent.Future;
+import apodemas.sheepdog.server.sub.SubscriptionManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,10 +15,10 @@ import java.util.List;
  * @time 2019-01-20 20:26
  **/
 public class SubscriptionsHandler extends JSONGetRequestHandler {
-    private final SubscriptionController subscriptionController;
+    private final SubscriptionManager subscriptionManager;
 
-    public SubscriptionsHandler(SubscriptionController subscriptionController) {
-        this.subscriptionController = subscriptionController;
+    public SubscriptionsHandler(SubscriptionManager subscriptionManager) {
+        this.subscriptionManager = subscriptionManager;
     }
 
     @Override
@@ -32,7 +30,7 @@ public class SubscriptionsHandler extends JSONGetRequestHandler {
         }
 
         List<ClientSessionInfo> infos = new ArrayList<>();
-        List<Session> sessions = subscriptionController.getTopicSubSessions(topic);
+        List<Session> sessions = subscriptionManager.getTopicSubSessions(topic);
         for (Session session : sessions) {
             ClientSessionInfo info = new ClientSessionInfo(session.clientId(), null);
             infos.add(info);

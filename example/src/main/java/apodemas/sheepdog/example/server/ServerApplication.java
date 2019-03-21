@@ -5,7 +5,6 @@ import apodemas.sheepdog.server.Server;
 import apodemas.sheepdog.server.ServerSettings;
 import apodemas.sheepdog.server.mq.rocket.RocketMQSettings;
 import io.netty.util.concurrent.Future;
-import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 
 /**
  * @author caozheng
@@ -14,12 +13,31 @@ import org.apache.rocketmq.common.consumer.ConsumeFromWhere;
 public class ServerApplication {
     public static void main(String[] args) throws Exception{
         ServerSettings serverSettings = new ServerSettings();
-        serverSettings.setIdPrefix("ABCDEF1234567890");
+        serverSettings.setClientIdPrefix("ABCDEF1234567890");
         RocketMQSettings rocketMQSettings = new RocketMQSettings();
         serverSettings.setCustomSetting(rocketMQSettings);
 
         Server server = new Server(serverSettings);
-        Future<Void> terFuture = server.bind("127.0.0.1", 3883);
-        terFuture.await();
+        Runtime.getRuntime().addShutdownHook(
+                new Thread(){
+                    @Override
+                    public void run() {
+                        server.shutdown();
+                    }
+                }
+        );
+        server.start();
+        Thread t = new Thread(()->{
+            try {
+                Thread.sleep(1000);
+            }catch (Throwable e){
+
+            }
+           server.shutdown();
+        });
+//        t.start();
+        server.terminationFuture().await();
+        System.out.println("server over");
+
     }
 }

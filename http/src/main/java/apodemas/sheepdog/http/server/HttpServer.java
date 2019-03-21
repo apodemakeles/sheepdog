@@ -1,5 +1,6 @@
 package apodemas.sheepdog.http.server;
 
+import apodemas.sheepdog.core.concurrent.AllFuture;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -12,6 +13,9 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GlobalEventExecutor;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author caozheng
@@ -34,10 +38,6 @@ public class HttpServer {
         this.workerGroup = new NioEventLoopGroup();
     }
 
-    public String id(){
-        return "sheepdog api server";
-    }
-
     public Future<Void> start(){
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup)
@@ -57,10 +57,17 @@ public class HttpServer {
         return bootstrap.bind(this.ip, this.port);
     }
 
-//    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit){
-//        Future<?> boss = bossGroup.shutdownGracefully(quietPeriod, timeout, unit);
-//        Future<?> worker = workerGroup.shutdownGracefully(quietPeriod, timeout, unit);
-//
-//        return new AllFuture(GlobalEventExecutor.INSTANCE, boss, worker);
-//    }
+    public Future<?> shutdownGracefully(){
+        Future<?> boss = bossGroup.shutdownGracefully();
+        Future<?> worker = workerGroup.shutdownGracefully();
+
+        return new AllFuture(boss, worker);
+    }
+
+    public Future<?> shutdownGracefully(long quietPeriod, long timeout, TimeUnit unit){
+        Future<?> boss = bossGroup.shutdownGracefully(quietPeriod, timeout, unit);
+        Future<?> worker = workerGroup.shutdownGracefully(quietPeriod, timeout, unit);
+
+        return new AllFuture(boss, worker);
+    }
 }

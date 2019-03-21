@@ -3,7 +3,7 @@ package apodemas.sheepdog.server;
 import apodemas.sheepdog.common.StringUtils;
 import apodemas.sheepdog.core.mqtt.ProMqttMessageFactory;
 import apodemas.sheepdog.server.auth.Authenticator;
-import apodemas.sheepdog.server.sub.SubscriptionController;
+import apodemas.sheepdog.server.sub.SubscriptionManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.mqtt.*;
@@ -13,8 +13,6 @@ import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.Future;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
-
-import java.util.List;
 
 import static io.netty.handler.codec.mqtt.MqttMessageType.CONNECT;
 
@@ -33,15 +31,15 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
     private Session session;
 
     private final ServerSettings settings;
-    private final SessionController sessionController;
-    private final SubscriptionController subscriptionController;
+    private final SessionManager sessionManager;
+    private final SubscriptionManager subscriptionManager;
     private final Authenticator authenticator;
 
-    public ServerHandler(ServerSettings settings, SessionController sessionController,
-                         SubscriptionController subscriptionController, Authenticator authenticator){
+    public ServerHandler(ServerSettings settings, SessionManager sessionManager,
+                         SubscriptionManager subscriptionManager, Authenticator authenticator){
         this.settings = settings;
-        this.sessionController = sessionController;
-        this.subscriptionController = subscriptionController;
+        this.sessionManager = sessionManager;
+        this.subscriptionManager = subscriptionManager;
         this.authenticator = authenticator;
     }
 
@@ -114,7 +112,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
 
         ConnectInfo connectInfo = new ConnectInfo();
         connectInfo.setClientId(msg.payload().clientIdentifier());
-        connectInfo.setPrefix(settings.idPrefix());
+        connectInfo.setPrefix(settings.clientIdPrefix());
         if(msg.variableHeader().hasUserName()){
             connectInfo.setUsername(msg.payload().userName());
             if(msg.variableHeader().hasPassword()){
@@ -157,7 +155,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<MqttMessage> {
     }
 
     private void onAuthSuccess(ConnectInfo connectInfo, ChannelHandlerContext ctx){
-        sessionController.registerClient(connectInfo, ctx.executor().newPromise())
+        sessionManager.registerClient(connectInfo, ctx.executor().newPromise())
                 .addListener((Future<Session> sessFut)->{
                     if(sessFut.isSuccess()){
                         session = sessFut.get();
